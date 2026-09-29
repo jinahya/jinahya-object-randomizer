@@ -10,9 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Verifications of a <em>randomized</em> {@link Address} -- of the value, that is, not of whatever produced it.
  * <p>
- * The contract splits in two, and the split is the whole point of randomizing a class the specification constrains.
- * {@link #verify(Address)} holds for all four engines: the fields are filled. {@link #verifyValid(ObjectRandomizer)}
- * does not -- it holds only for an engine which <em>reads</em> the constraints, and Easy Random 6 can not.
+ * The contract splits in two. {@link #verify(Address)} is what every flavor owes: the fields are filled.
+ * {@link #verifyValid(ObjectRandomizer)} adds what randomizing a class the specification constrains is actually for
+ * -- that the value satisfies those constraints -- and every flavor here now owes that too, so each of the three
+ * calls it.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @see Address_Randomizer_Constants
@@ -67,8 +68,8 @@ public final class Address_Randomized_Verifier {
      * the constraints the specification declares.
      *
      * @param randomizer the randomizer to draw from.
-     * @apiNote Only for an engine which reads the constraints. {@code Address_Randomizer_EasyRandom} does not,
-     *         and is not wrong to: Easy Random 6 removed its constraint support outright.
+     * @apiNote For an engine which reads the constraints, which all three here do, each by its own mechanism;
+     *         see the {@code Bean validation} section of the README for what each one costs.
      */
     public static void verifyValid(final ObjectRandomizer<Address> randomizer) {
         final var validator = validator();

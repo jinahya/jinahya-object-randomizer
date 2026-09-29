@@ -7,7 +7,7 @@ import com.github.jinahya.object.randomizer.PodamObjectRandomizer;
  * <p>
  * The PODAM flavor is chosen because it is the one which honors {@code jakarta.validation.constraints} with no
  * configuration at all, which is the whole point of randomizing a class the Jakarta Validation specification publishes.
- * The exclusions, which are none, live in {@link Address_Randomizer_Constants}, so that this randomizer and the four
+ * The exclusions, which are none, live in {@link Address_Randomizer_Constants}, so that this randomizer and the three
  * beside it are configured from one place.
  * <p>
  * This class belongs to the Jakarta Validation 3.1 specification, and is declared under that generation's own

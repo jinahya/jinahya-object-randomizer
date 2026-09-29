@@ -8,7 +8,7 @@ import com.github.jinahya.object.randomizer.InstancioObjectRandomizer;
  * This class is <strong>not</strong> named by the convention that
  * {@link com.github.jinahya.object.randomizer.ObjectRandomizerUtils#locateStandard(Class) locateStandard} probes --
  * which is only {@code AddressRandomizer} and {@code Address_Randomizer} -- so it is never located, and never competes
- * with {@link Address_Randomizer}, the one located by the convention. It stands beside the three other flavors so that
+ * with {@link Address_Randomizer}, the one located by the convention. It stands beside the two other flavors so that
  * each engine has exactly one class here, and they can be read, and tested, as a set.
  * <p>
  * Nothing is overridden to make the constraints honored: {@code InstancioObjectRandomizer} sets
