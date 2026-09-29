@@ -3,7 +3,7 @@
  * <p>
  * A target class is randomized by an {@link com.github.jinahya.object.randomizer.ObjectRandomizer randomizer}, which is
  * located, for the target class, by a naming convention; see
- * {@link ObjectRandomizerUtils#locateStandard(java.lang.Class)} for the convention applied.
+ * {@link com.github.jinahya.object.randomizer.ObjectRandomizerUtils} for the convention applied.
  *
  * <h2>The types</h2>
  * <dl>
@@ -26,8 +26,8 @@
  * {@link com.github.jinahya.object.randomizer.PodamObjectRandomizer} and
  * {@link com.github.jinahya.object.randomizer.InstancioObjectRandomizer} take it from
  * {@link com.github.jinahya.object.randomizer.AbstractObjectRandomizer#newTargetInstance() newTargetInstance()},
- * which invokes the no-argument constructor of the target class -- which may be {@code private} -- and which a
- * randomizer overrides for a class that declares no such constructor, or that needs state assigned before it is
+ * which invokes the no-argument constructor of the target class &mdash; which may be {@code private} &mdash; and which
+ * a randomizer overrides for a class that declares no such constructor, or that needs state assigned before it is
  * randomized. The other two, {@link com.github.jinahya.object.randomizer.EasyRandomObjectRandomizer} and
  * {@link com.github.jinahya.object.randomizer.FixtureMonkeyObjectRandomizer}, construct the instance themselves, and
  * so never call that method. Pick {@code PodamObjectRandomizer} for the {@code jakarta.validation.constraints} it

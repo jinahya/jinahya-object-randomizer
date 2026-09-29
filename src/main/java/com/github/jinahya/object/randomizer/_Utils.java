@@ -45,8 +45,7 @@ final class _Utils {
         }
         // the class loader of the type, rather than the one of this class, for the type may have been loaded by an
         // other class loader
-        final var classLoader = Optional.ofNullable(type.getClassLoader())
-                .orElseGet(_Utils.class::getClassLoader);
+        final var classLoader = Optional.ofNullable(type.getClassLoader()).orElseGet(_Utils.class::getClassLoader);
         final String typeName = type.getName();
         for (final String postfix : postfixes) {
             // isBlank() already ignores surrounding whitespace, so stripping first was redundant here;

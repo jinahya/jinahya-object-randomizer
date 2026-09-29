@@ -5,10 +5,10 @@ import java.util.function.Supplier;
 /**
  * An interface for randomizing instances of a specific class.
  * <p>
- * This is the role which {@link ObjectRandomizerUtils#locateStandard(Class) locateStandard} locates for a target class,
- * and which {@link ObjectRandomizerUtils#newRandomizedInstanceOf(Class)} calls. Implement it directly for a randomizer
- * which owes nothing to the machinery of {@link AbstractObjectRandomizer}; extend that class, or one of the flavors
- * beside it, for the exclusions, and the engine, it brings.
+ * This is the role which the {@linkplain ObjectRandomizerUtils naming convention} locates for a target class, and which
+ * {@link ObjectRandomizerUtils#newRandomizedInstanceOf(Class)} calls. Implement it directly for a randomizer which owes
+ * nothing to the machinery of {@link AbstractObjectRandomizer}; extend that class, or one of the flavors beside it, for
+ * the exclusions, and the engine, it brings.
  *
  * @param <T> the type of the instances to randomize.
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;

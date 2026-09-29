@@ -28,10 +28,8 @@ import jakarta.validation.constraints.Size;
  *         <p>
  *         Accessors are added, which the specification's class does not declare: {@code PodamObjectRandomizer} writes a
  *         property through its setter and never assigns a field.
- * @see <a
- *         href="https://jakarta.ee/specifications/bean-validation/3.0/jakarta-bean-validation-spec-3.0
- *         .html#example-groupsequence">Jakarta
- *         Bean Validation 3.0, Make use of group sequence</a>
+ * @see <a href="https://jakarta.ee/specifications/bean-validation/3.0/jakarta-bean-validation-spec-3.0
+ *         .html#example-groupsequence">Jakarta Bean Validation 3.0, Make use of group sequence</a>
  */
 public class Address {
 

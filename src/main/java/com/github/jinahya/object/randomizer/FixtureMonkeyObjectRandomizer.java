@@ -45,7 +45,12 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
      * Creates a new instance for initializing a randomized instance of the specified class.
      *
      * @param targetClass    the class to be randomized.
-     * @param excludedFields fields to be excluded from randomization.
+     * @param excludedFields fields to be excluded from randomization; {@code null}, and blank, elements are dropped,
+     *                       and the rest are stripped and deduplicated.
+     * @throws NullPointerException when either argument is {@code null}.
+     * @apiNote A subclass is expected to declare a no-argument constructor which supplies both arguments, for
+     *         that is how a located randomizer class is instantiated.
+     * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
     public FixtureMonkeyObjectRandomizer(final Class<T> targetClass, final Iterable<String> excludedFields) {
         super(targetClass, excludedFields);
