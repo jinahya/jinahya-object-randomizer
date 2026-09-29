@@ -1,0 +1,10 @@
+module com.github.jinahya.object.randomizer {
+    // every engine is optional at run time; a consumer brings exactly the one its randomizers extend
+    requires static podam;
+    requires static easy.random.core;
+    requires static org.instancio.core;
+    requires static fixture.monkey;
+    requires static org.jspecify;
+    exports com.github.jinahya.object.randomizer;
+    opens com.github.jinahya.object.randomizer;
+}
