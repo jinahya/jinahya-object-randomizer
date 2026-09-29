@@ -1,7 +1,5 @@
 package com.github.jinahya.object.randomizer;
 
-import com.navercorp.fixturemonkey.FixtureMonkey;
-import com.navercorp.fixturemonkey.api.introspector.FieldReflectionArbitraryIntrospector;
 import com.navercorp.fixturemonkey.jakarta.validation.plugin.JakartaValidationPlugin;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -11,7 +9,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import org.instancio.settings.Keys;
-import org.instancio.settings.Settings;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -96,8 +93,8 @@ class AbstractObjectRandomizer_BeanValidation_Test {
     }
 
     /**
-     * Instancio honors the constraints only once {@link Keys#BEAN_VALIDATION_ENABLED} is set, which is what
-     * {@link #getInstancioSettings()} is overridable for.
+     * Instancio honors the constraints because {@link InstancioObjectRandomizer} sets
+     * {@link Keys#BEAN_VALIDATION_ENABLED} in its default settings. Nothing here has to be overridden.
      */
     static class ConstrainedInstancioRandomizer
             extends InstancioObjectRandomizer<Constrained> {
@@ -105,30 +102,18 @@ class AbstractObjectRandomizer_BeanValidation_Test {
         ConstrainedInstancioRandomizer() {
             super(Constrained.class, List.of());
         }
-
-        @Override
-        protected Settings getInstancioSettings() {
-            return super.getInstancioSettings().set(Keys.BEAN_VALIDATION_ENABLED, true);
-        }
     }
 
     /**
-     * Fixture Monkey honors the constraints only once {@link JakartaValidationPlugin} is registered, which is what
-     * {@link #getFixtureMonkey()} is overridable for.
+     * Fixture Monkey honors the constraints because {@code fixture-monkey-jakarta-validation} is on the test classpath,
+     * which {@link FixtureMonkeyObjectRandomizer} detects and registers {@link JakartaValidationPlugin} for. Nothing
+     * here has to be overridden.
      */
     static class ConstrainedFixtureMonkeyRandomizer
             extends FixtureMonkeyObjectRandomizer<Constrained> {
 
         ConstrainedFixtureMonkeyRandomizer() {
             super(Constrained.class, List.of());
-        }
-
-        @Override
-        protected FixtureMonkey getFixtureMonkey() {
-            return FixtureMonkey.builder()
-                    .objectIntrospector(FieldReflectionArbitraryIntrospector.INSTANCE)
-                    .plugin(new JakartaValidationPlugin())
-                    .build();
         }
     }
 

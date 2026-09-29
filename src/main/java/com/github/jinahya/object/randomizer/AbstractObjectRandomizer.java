@@ -18,7 +18,6 @@ import java.util.stream.StreamSupport;
  * @param <T> the type of the instances to randomize.
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @see PodamObjectRandomizer
- * @see EasyRandomObjectRandomizer
  * @see InstancioObjectRandomizer
  * @see FixtureMonkeyObjectRandomizer
  * @see ObjectRandomizerUtils#newRandomizedInstanceOf(Class)
@@ -27,7 +26,7 @@ import java.util.stream.StreamSupport;
 public abstract class AbstractObjectRandomizer<T>
         implements ObjectRandomizer<T> {
 
-//SEP:CONSTRUCTORS
+    // ---------------------------------------------------------------------------------------------------- CONSTRUCTORS
 
     /**
      * Creates a new instance for initializing a randomized instance of the specified class.

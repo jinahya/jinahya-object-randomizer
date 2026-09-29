@@ -1,8 +1,6 @@
 package com.github.jinahya.object.randomizer.spec.validation;
 
 import com.github.jinahya.object.randomizer.InstancioObjectRandomizer;
-import org.instancio.settings.Keys;
-import org.instancio.settings.Settings;
 
 /**
  * An Instancio randomizer of {@link Address}.
@@ -13,8 +11,8 @@ import org.instancio.settings.Settings;
  * with {@link Address_Randomizer}, the one located by the convention. It stands beside the three other flavors so that
  * each engine has exactly one class here, and they can be read, and tested, as a set.
  * <p>
- * Instancio reads the constraints only once {@link Keys#BEAN_VALIDATION_ENABLED} is set, which is what
- * {@link #getInstancioSettings()} is overridden for here.
+ * Nothing is overridden to make the constraints honored: {@code InstancioObjectRandomizer} sets
+ * {@code Keys.BEAN_VALIDATION_ENABLED} in the settings it returns by default.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @see Address_Randomizer
@@ -30,15 +28,5 @@ public class Address_Randomizer_Instancio
      */
     public Address_Randomizer_Instancio() {
         super(Address.class, Address_Randomizer_Constants.EXCLUDED_FIELDS);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @return settings with {@link Keys#BEAN_VALIDATION_ENABLED} turned on.
-     */
-    @Override
-    protected Settings getInstancioSettings() {
-        return super.getInstancioSettings().set(Keys.BEAN_VALIDATION_ENABLED, true);
     }
 }

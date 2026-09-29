@@ -41,7 +41,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @see InstancioObjectRandomizer
  * @see FixtureMonkeyObjectRandomizer
  */
-public abstract class EasyRandomObjectRandomizer<T>
+abstract class EasyRandomObjectRandomizer<T>
         extends AbstractObjectRandomizer<T> {
 
     /**
@@ -55,8 +55,8 @@ public abstract class EasyRandomObjectRandomizer<T>
      *         that is how a located randomizer class is instantiated.
      * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
-    public EasyRandomObjectRandomizer(final Class<T> targetClass,
-                                      final Iterable<String> excludedFields) {
+    EasyRandomObjectRandomizer(final Class<T> targetClass,
+                               final Iterable<String> excludedFields) {
         super(targetClass, excludedFields);
     }
 

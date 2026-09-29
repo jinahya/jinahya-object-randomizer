@@ -3,7 +3,9 @@ package com.github.jinahya.object.randomizer;
 import com.navercorp.fixturemonkey.ArbitraryBuilder;
 import com.navercorp.fixturemonkey.FixtureMonkey;
 import com.navercorp.fixturemonkey.api.introspector.FieldReflectionArbitraryIntrospector;
+import com.navercorp.fixturemonkey.api.plugin.Plugin;
 import com.navercorp.fixturemonkey.api.property.DefaultPropertyGenerator;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -13,18 +15,20 @@ import java.util.Objects;
  * <p>
  * This flavor assigns fields reflectively, through the
  * {@link FieldReflectionArbitraryIntrospector field-reflection introspector}, and so populates a class which declares
- * no accessors at all. Like {@link EasyRandomObjectRandomizer}, and unlike {@link InstancioObjectRandomizer}, it does
- * not use {@link #newTargetInstance()}: the engine constructs the instance itself, so an override of that method has no
- * say. It does, however, go through a <em>no-argument constructor</em> — where {@link EasyRandomObjectRandomizer}
- * bypasses constructors entirely — so a value which the no-argument constructor, or a field initializer, assigns is in
- * place before the fields are written, and an excluded field keeps it.
+ * no accessors at all. Unlike {@link InstancioObjectRandomizer}, it does not use {@link #newTargetInstance()}: the
+ * engine constructs the instance itself, so an override of that method has no say. It does, however, go through a
+ * <em>no-argument constructor</em>, so a value which that constructor, or a field initializer, assigns is in place
+ * before the fields are written, and an excluded field keeps it.
  * <p>
  * It is also the flavor whose builder a subclass can drive declaratively: override {@link #getArbitraryBuilder()} and
  * set, fix, or post-condition a property by name before it is sampled.
  * <p>
- * <strong>Bean validation constraints are honored only when asked for.</strong> Constraint support lives in a
- * separate plugin: add {@code com.navercorp.fixturemonkey:fixture-monkey-jakarta-validation} and register its
- * {@code JakartaValidationPlugin} by overriding {@link #getFixtureMonkey()}. The {@code javax} counterpart,
+ * <strong>Bean validation constraints are honored once the plugin is on the classpath.</strong> Unlike every other
+ * engine here, Fixture Monkey keeps its constraint support in a <em>second</em> artifact: add
+ * {@code com.navercorp.fixturemonkey:fixture-monkey-jakarta-validation}, and {@link #getFixtureMonkey()} finds its
+ * {@code JakartaValidationPlugin} and registers it. Nothing is overridden, and this module does not depend on that
+ * artifact — the lookup is reflective, so leaving it off the classpath is not an error, only a
+ * {@link System.Logger.Level#DEBUG DEBUG} line and constraints which go unread. The {@code javax} counterpart,
  * {@code fixture-monkey-javax-validation}, is the wrong one for this platform.
  *
  * @param <T> the type of the instances to randomize.
@@ -34,12 +38,49 @@ import java.util.Objects;
  *         to be a complete one without asserting on it.
  * @see <a href="https://naver.github.io/fixture-monkey">Fixture Monkey</a>
  * @see PodamObjectRandomizer
- * @see EasyRandomObjectRandomizer
  * @see InstancioObjectRandomizer
  * @see FieldReflectionArbitraryIntrospector
  */
 public abstract class FixtureMonkeyObjectRandomizer<T>
         extends AbstractObjectRandomizer<T> {
+
+    private static final System.Logger logger = System.getLogger(FixtureMonkeyObjectRandomizer.class.getName());
+
+    /**
+     * Holds the {@code JakartaValidationPlugin}, when there is one to hold.
+     *
+     * @implNote Resolved once, and reflectively: constraint support is a separate artifact,
+     *         {@code com.navercorp.fixturemonkey:fixture-monkey-jakarta-validation}, which this module does not depend
+     *         on. The plugin interface it implements does, however, come with the engine itself, so the instance can be
+     *         handed to the builder without this class ever referencing the plugin type. A {@code null} means the
+     *         artifact is absent, which is not an error -- it is the classpath of a consumer which did not ask for
+     *         constraints.
+     */
+    private static final class PluginHolder {
+
+        private static final String PLUGIN_CLASS_NAME =
+                "com.navercorp.fixturemonkey.jakarta.validation.plugin.JakartaValidationPlugin";
+
+        private static final @Nullable Plugin INSTANCE = locate();
+
+        private static @Nullable Plugin locate() {
+            try {
+                return (Plugin) Class.forName(PLUGIN_CLASS_NAME).getConstructor().newInstance();
+            } catch (final ClassNotFoundException cnfe) {
+                logger.log(System.Logger.Level.DEBUG,
+                           () -> PLUGIN_CLASS_NAME + " is not on the classpath;"
+                                 + " jakarta.validation.constraints will not be honored");
+                return null;
+            } catch (final ReflectiveOperationException roe) {
+                logger.log(System.Logger.Level.WARNING, () -> "failed to instantiate " + PLUGIN_CLASS_NAME, roe);
+                return null;
+            }
+        }
+
+        private PluginHolder() {
+            throw new AssertionError("instantiation is not allowed");
+        }
+    }
 
     /**
      * Creates a new instance for initializing a randomized instance of the specified class.
@@ -56,7 +97,7 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
         super(targetClass, excludedFields);
     }
 
-//SEP8//
+    // -----------------------------------------------------------------------------------------------------------------
 
     /**
      * Creates a new engine which writes fields reflectively and which generates no property named in
@@ -75,20 +116,27 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
      *         {@link DefaultPropertyGenerator#FIELD_METHOD_PROPERTY_GENERATOR}, which is what the engine would use
      *         anyway, and
      *         {@link com.navercorp.fixturemonkey.FixtureMonkeyBuilder#defaultNotNull(boolean) defaultNotNull} keeps an
-     *         association from being sampled as {@code null}.
+     *         association from being sampled as {@code null}. The {@code JakartaValidationPlugin} is registered here
+     *         too, when the artifact which carries it is on the classpath.
+     * @implSpec An override which does not build on what this method returns gives up the exclusions, and the
+     *         plugin, along with them.
      * @see FixtureMonkey#builder()
      */
     protected FixtureMonkey getFixtureMonkey() {
-        return FixtureMonkey.builder()
+        final var builder = FixtureMonkey.builder()
                 .objectIntrospector(FieldReflectionArbitraryIntrospector.INSTANCE)
                 .defaultNotNull(true)
-                .pushAssignableTypePropertyGenerator(targetClass,
-                                                     property -> DefaultPropertyGenerator.FIELD_METHOD_PROPERTY_GENERATOR
-                                                             .generateChildProperties(property).stream()
-                                                             .filter(child -> !excludedFields.contains(
-                                                                     child.getName()))
-                                                             .toList())
-                .build();
+                .pushAssignableTypePropertyGenerator(
+                        targetClass,
+                        property -> DefaultPropertyGenerator.FIELD_METHOD_PROPERTY_GENERATOR
+                                .generateChildProperties(property).stream()
+                                .filter(child -> !excludedFields.contains(child.getName()))
+                                .toList()
+                );
+        if (PluginHolder.INSTANCE != null) {
+            builder.plugin(PluginHolder.INSTANCE);
+        }
+        return builder.build();
     }
 
     /**

@@ -14,7 +14,6 @@
  *   <dd>A skeletal implementation which holds the target class and the excluded fields, and which every flavor
  *       below extends. It references no engine at all.</dd>
  *   <dt>{@link com.github.jinahya.object.randomizer.PodamObjectRandomizer},
- *       {@link com.github.jinahya.object.randomizer.EasyRandomObjectRandomizer},
  *       {@link com.github.jinahya.object.randomizer.InstancioObjectRandomizer},
  *       {@link com.github.jinahya.object.randomizer.FixtureMonkeyObjectRandomizer}</dt>
  *   <dd>One flavor per engine.</dd>
@@ -28,15 +27,14 @@
  * {@link com.github.jinahya.object.randomizer.AbstractObjectRandomizer#newTargetInstance() newTargetInstance()},
  * which invokes the no-argument constructor of the target class &mdash; which may be {@code private} &mdash; and which
  * a randomizer overrides for a class that declares no such constructor, or that needs state assigned before it is
- * randomized. The other two, {@link com.github.jinahya.object.randomizer.EasyRandomObjectRandomizer} and
- * {@link com.github.jinahya.object.randomizer.FixtureMonkeyObjectRandomizer}, construct the instance themselves, and
- * so never call that method. Pick {@code PodamObjectRandomizer} for the {@code jakarta.validation.constraints} it
- * honors out of the box, or {@code InstancioObjectRandomizer} for a class which declares no accessors, which PODAM
- * would leave entirely unpopulated; of the four, Easy Random 6 is the one which can honor no Jakarta constraint at
- * all.
+ * randomized. {@link com.github.jinahya.object.randomizer.FixtureMonkeyObjectRandomizer} constructs the instance
+ * itself, and so never calls that method. Pick {@code PodamObjectRandomizer} for the
+ * {@code jakarta.validation.constraints} it honors with nothing added, or
+ * {@code InstancioObjectRandomizer} for a class which declares no accessors, which PODAM would leave entirely
+ * unpopulated.
  *
  * <h2>Engines</h2>
- * Each of the four flavors is backed by a different engine, and every engine is a {@code provided} dependency: a
+ * Each of the three flavors is backed by a different engine, and every engine is a {@code provided} dependency: a
  * consumer puts exactly one of them on its classpath, and the flavors it does not use are never loaded. Neither
  * {@link com.github.jinahya.object.randomizer.ObjectRandomizer} nor
  * {@link com.github.jinahya.object.randomizer.AbstractObjectRandomizer} references an engine at all.
@@ -49,7 +47,7 @@
  * <h2>Example</h2>
  * Given a class {@code Foo}, declare, beside it:
  * <pre>{@code
- * class FooRandomizer extends EasyRandomObjectRandomizer<Foo> {
+ * class FooRandomizer extends PodamObjectRandomizer<Foo> {
  *     FooRandomizer() {
  *         super(Foo.class, List.of("id"));  // leave the generated identifier alone
  *     }

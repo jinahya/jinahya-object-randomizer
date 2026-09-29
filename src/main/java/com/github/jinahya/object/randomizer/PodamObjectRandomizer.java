@@ -20,15 +20,17 @@ import java.util.List;
  * <strong>The target class has to expose accessors.</strong> PODAM writes a property through its setter, and
  * recurses into one through its getter; it never assigns a field reflectively. A class which declares only fields,
  * which is the ordinary shape of a JPA entity mapped with field access, is therefore left <em>entirely
- * unpopulated</em>, silently and without an error. Use {@link EasyRandomObjectRandomizer},
- * {@link InstancioObjectRandomizer}, or {@link FixtureMonkeyObjectRandomizer} for such a class — bearing in mind that,
- * of those, only {@link InstancioObjectRandomizer} uses {@link #newTargetInstance()} — or extend
- * {@link AbstractObjectRandomizer} directly and populate the instance by hand.
+ * unpopulated</em>, silently and without an error. Use {@link InstancioObjectRandomizer} or
+ * {@link FixtureMonkeyObjectRandomizer} for such a class — bearing in mind that, of those two, only
+ * {@link InstancioObjectRandomizer} uses {@link #newTargetInstance()} — or extend {@link AbstractObjectRandomizer}
+ * directly and populate the instance by hand.
  * <p>
- * This is the only flavor which honors {@code jakarta.validation.constraints} out of the box; PODAM reads them through
- * its {@link uk.co.jemos.podam.common.BeanValidationStrategy}. {@link InstancioObjectRandomizer} and
- * {@link FixtureMonkeyObjectRandomizer} honor them once explicitly configured to, and
- * {@link EasyRandomObjectRandomizer} can not honor them at all.
+ * This flavor honors {@code jakarta.validation.constraints} with nothing added to the classpath and nothing overridden;
+ * PODAM reads them through its {@link uk.co.jemos.podam.common.BeanValidationStrategy}. Of the others,
+ * {@link FixtureMonkeyObjectRandomizer} honors them once {@code fixture-monkey-jakarta-validation} is on the classpath,
+ * and {@link InstancioObjectRandomizer} once {@link InstancioObjectRandomizer#getInstancioSettings() its settings} say
+ * so. Read the {@code @implNote} below before treating this flavor as the safe default: its support is real, but
+ * partial.
  *
  * @param <T> the type of the instances to randomize.
  * @implNote Constraint support is partial, and is keyed to the <em>field</em>: an annotation declared on a
@@ -37,7 +39,6 @@ import java.util.List;
  *         honored, while a lone {@code @Max} is ignored and {@code @Pattern} yields {@code null}. Do not take a
  *         randomized instance to be a valid one without validating it.
  * @see <a href="https://mtedone.github.io/podam/">PODAM</a>
- * @see EasyRandomObjectRandomizer
  * @see InstancioObjectRandomizer
  * @see FixtureMonkeyObjectRandomizer
  * @see uk.co.jemos.podam.common.BeanValidationStrategy
