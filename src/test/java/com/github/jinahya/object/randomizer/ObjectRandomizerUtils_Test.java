@@ -119,6 +119,18 @@ class ObjectRandomizerUtils_Test {
         }
     }
 
+    /**
+     * A class whose conventionally named sibling exists, but is not an {@link ObjectRandomizer} at all: a fault the
+     * probe deliberately does not judge, so that it is reported where the role is known.
+     */
+    static class Misnamed {
+
+    }
+
+    static class MisnamedRandomizer {
+
+    }
+
     // ---------------------------------------------------------------------------------------------------------------------
     @DisplayName("moreExcludedFields(a, b) -> a, then b, as they are")
     @Test
@@ -177,6 +189,13 @@ class ObjectRandomizerUtils_Test {
                 .isInstanceOf(NullPointerException.class);
     }
 
+    @DisplayName("newRandomizerInstanceOf(Misnamed.class) -> empty;"
+                 + " a sibling named by the convention which is not an ObjectRandomizer is passed over")
+    @Test
+    void newRandomizerInstanceOf_Empty_SiblingIsNotARandomizer() {
+        assertThat(ObjectRandomizerUtils.newRandomizerInstanceOf(Misnamed.class)).isEmpty();
+    }
+
     @DisplayName("newRandomizedInstanceOf(Bean.class) -> present, from the sibling BeanRandomizer")
     @Test
     void newRandomizedInstanceOf_Present_Bean() {
@@ -193,21 +212,17 @@ class ObjectRandomizerUtils_Test {
                 .containsInstanceOf(Sub.class);
     }
 
-    @DisplayName("newRandomizedInstanceOf(Narrowed.class) -> RuntimeException;"
-                 + " NarrowedRandomizer was provided, so producing a Sup is a fault, not an absence")
+    @DisplayName("newRandomizedInstanceOf(Narrowed.class) -> empty;"
+                 + " NarrowedRandomizer produces a Sup, which is not a Narrowed, so nothing is handed back")
     @Test
-    void newRandomizedInstanceOf_RuntimeException_RandomizerProducesASuperclass() {
-        assertThatThrownBy(() -> ObjectRandomizerUtils.newRandomizedInstanceOf(Narrowed.class))
-                .isExactlyInstanceOf(RuntimeException.class)
-                .hasMessageContaining("produced a");
+    void newRandomizedInstanceOf_Empty_RandomizerProducesASuperclass() {
+        assertThat(ObjectRandomizerUtils.newRandomizedInstanceOf(Narrowed.class)).isEmpty();
     }
 
-    @DisplayName("newRandomizedInstanceOf(Unrelated.class) -> RuntimeException;"
-                 + " UnrelatedRandomizer was provided, so producing a Foreign is a fault, not an absence")
+    @DisplayName("newRandomizedInstanceOf(Unrelated.class) -> empty;"
+                 + " UnrelatedRandomizer produces a Foreign, which is not an Unrelated, so nothing is handed back")
     @Test
-    void newRandomizedInstanceOf_RuntimeException_RandomizerProducesAnUnrelatedClass() {
-        assertThatThrownBy(() -> ObjectRandomizerUtils.newRandomizedInstanceOf(Unrelated.class))
-                .isExactlyInstanceOf(RuntimeException.class)
-                .hasMessageContaining("produced a");
+    void newRandomizedInstanceOf_Empty_RandomizerProducesAnUnrelatedClass() {
+        assertThat(ObjectRandomizerUtils.newRandomizedInstanceOf(Unrelated.class)).isEmpty();
     }
 }
