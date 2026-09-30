@@ -1,4 +1,4 @@
-package com.github.jinahya.object.randomizer.spec.validation;
+package com.github.jinahya.object.randomizer.spec.validation.address;
 
 import com.github.jinahya.object.randomizer.ObjectRandomizer;
 import jakarta.validation.Validation;

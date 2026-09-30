@@ -1,4 +1,4 @@
-package com.github.jinahya.object.randomizer.spec.validation;
+package com.github.jinahya.object.randomizer.spec.validation.address;
 
 import java.util.List;
 

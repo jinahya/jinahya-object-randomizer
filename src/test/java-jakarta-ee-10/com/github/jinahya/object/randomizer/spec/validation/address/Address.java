@@ -1,4 +1,4 @@
-package com.github.jinahya.object.randomizer.spec.validation;
+package com.github.jinahya.object.randomizer.spec.validation.address;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,8 +13,8 @@ import jakarta.validation.constraints.Size;
  * specification itself publishes, rather than one invented in a unit test.
  * <p>
  * Everything belonging to a specification is declared under that specification's own
- * {@code src/test/java-jakarta-ee-NN} source root -- this class, {@link Address_Randomizer}, and
- * {@code Address_Randomizer_Test} alike -- and only the root of the active {@code jakarta-ee-NN} profile is compiled.
+ * {@code src/test/java-jakarta-ee-NN} source root -- this class, its randomizers, and their tests alike -- and only
+ * the root of the active {@code jakarta-ee-NN} profile is compiled.
  * Nothing is shared between the generations, even where two copies happen to have the same signature: a specification
  * is free to change one of them without the other, and the split is what keeps that from becoming a conflict.
  *

@@ -52,6 +52,7 @@
     <maven.compiler.testSource>${maven.compiler.source}</maven.compiler.testSource>
     <maven.compiler.testTarget>${maven.compiler.testSource}</maven.compiler.testTarget>
     <maven.compiler.testRelease>${maven.compiler.testSource}</maven.compiler.testRelease>
+    <version.maven.compiler>3.16.0</version.maven.compiler>
     <version.maven.surefire>3.6.0</version.maven.surefire>
     <version.maven.failsafe>${version.maven.surefire}</version.maven.failsafe>
     <!-- the engines; each is provided, and a consumer brings exactly the one it uses -->
@@ -89,6 +90,8 @@
     <version.org.assertj>4.0.0-M1</version.org.assertj>
     <version.org.junit>5.14.4</version.org.junit>
     <version.org.mockito>5.23.0</version.org.mockito>
+    <!-- test-scope only, and on the annotation processor path of the test compilation alone; see <build> -->
+    <version.org.projectlombok>1.18.48</version.org.projectlombok>
     <version.org.slf4j>2.0.19</version.org.slf4j>
   </properties>
 
@@ -224,6 +227,16 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- the annotations only; the processor which acts on them is put on the processor path of the test
+         compilation, in <build>, and never on the compile classpath -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${version.org.projectlombok}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- routes the java.lang.System.Logger which main logs through to SLF4J, and so to Logback; this is the bridge,
+         not the SLF4J API, which logback-classic brings of its own accord -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-jdk-platform-logging</artifactId>
@@ -240,6 +253,30 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${version.maven.compiler}</version>
+        <executions>
+          <!-- Lombok is put on the processor path of the test compilation, and of that one alone: no class under
+               src/main uses it, and a processor path declared on the plugin rather than on an execution would apply
+               to the main compilation too. Declaring the path at all is also what enables annotation processing,
+               since javac runs no processor it merely finds on the classpath, so the main compilation goes on
+               running with no processor at all, which is what it wants. -->
+          <execution>
+            <id>default-testCompile</id>
+            <configuration>
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>org.projectlombok</groupId>
+                  <artifactId>lombok</artifactId>
+                  <version>${version.org.projectlombok}</version>
+                </path>
+              </annotationProcessorPaths>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
