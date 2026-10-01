@@ -29,9 +29,9 @@ jobs:
     name: build (${{ matrix.profile }})
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up JDK 25
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v6
       with:
         java-version: '25'
         distribution: 'temurin'
@@ -47,10 +47,16 @@ jobs:
     needs: build
     if: github.event_name == 'push'
 
+    # the snapshot upload is a write against the repository, which the default
+    # token is not granted; scoped to this job so the build matrix keeps its
+    # read-only one
+    permissions:
+      contents: write
+
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up JDK 25
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v6
       with:
         java-version: '25'
         distribution: 'temurin'
