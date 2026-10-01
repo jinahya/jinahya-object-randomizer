@@ -35,6 +35,7 @@ public class Address_Randomizer_FixtureMonkey
     public Address_Randomizer_FixtureMonkey() {
         super(Address.class, Address_Randomizer_Constants.EXCLUDED_FIELDS);
     }
+
     /**
      * {@inheritDoc}
      *

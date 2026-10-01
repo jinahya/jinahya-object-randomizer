@@ -1,8 +1,8 @@
 package com.github.jinahya.object.randomizer.example.excluded_fields;
 
 /**
- * A target whose {@code id} stands for a value the persistence provider assigns, and which a randomizer must
- * therefore leave alone.
+ * A target whose {@code id} stands for a value the persistence provider assigns, and which a randomizer must therefore
+ * leave alone.
  * <p>
  * The {@code id} carries {@link #UNASSIGNED} from the moment the instance exists, which is what makes the exclusion
  * observable: a randomizer which honored it leaves that value in place, and one which did not writes over it.
@@ -51,8 +51,8 @@ public class Entity {
     private Long id = UNASSIGNED;
 
     /**
-     * A field excluded from nothing, as the control: whatever is said of {@link #id} means little unless the very
-     * same randomizer is seen to fill this one.
+     * A field excluded from nothing, as the control: whatever is said of {@link #id} means little unless the very same
+     * randomizer is seen to fill this one.
      */
     private String name;
 }

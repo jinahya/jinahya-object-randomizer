@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Confirms the one requirement this package is about: an extending randomizer excludes what it names <em>and</em>
- * what the randomizer it extends already excluded.
+ * Confirms the one requirement this package is about: an extending randomizer excludes what it names <em>and</em> what
+ * the randomizer it extends already excluded.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */

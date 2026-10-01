@@ -6,9 +6,8 @@
  * subpackage confirms two things, so that a failure names its requirement by the package it is in.
  * <p>
  * These owe nothing to a specification, which is what separates them from
- * {@code com.github.jinahya.object.randomizer.spec}: the classes here are invented for the requirement they
- * illustrate, while the ones there are transcribed from the Jakarta Validation specification and are compiled per
- * generation.
+ * {@code com.github.jinahya.object.randomizer.spec}: the classes here are invented for the requirement they illustrate,
+ * while the ones there are transcribed from the Jakarta Validation specification and are compiled per generation.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */

@@ -32,11 +32,12 @@ public class Address_Randomizer_Podam
     public Address_Randomizer_Podam() {
         super(Address.class, Address_Randomizer_Constants.EXCLUDED_FIELDS);
     }
+
     /**
      * {@inheritDoc}
      *
-     * @return a randomized instance whose {@code zipCode} satisfies {@link FrenchZipCode}, which the engine alone
-     *         does not reach.
+     * @return a randomized instance whose {@code zipCode} satisfies {@link FrenchZipCode}, which the engine alone does
+     *         not reach.
      * @implSpec The engine populates the instance first, and {@link FrenchZipCodes#repaired(Address) repaired}
      *         then writes the one field it could not.
      */

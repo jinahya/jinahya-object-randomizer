@@ -24,8 +24,8 @@ import jakarta.validation.constraints.Min;
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @implNote Nothing of the listing is dropped: every constraint here is a built-in one, and the two groups it
- *         names are declared beside it, {@link Minimal} as the specification declares it elsewhere and
- *         {@link Later} as an empty interface the specification never declares at all.
+ *         names are declared beside it, {@link Minimal} as the specification declares it elsewhere and {@link Later} as
+ *         an empty interface the specification never declares at all.
  *         <p>
  *         Accessors are added, which the specification's class does not declare -- its listing says only
  *         {@code // setter/getters}: {@code PodamObjectRandomizer} writes a property through its setter and never
@@ -79,8 +79,8 @@ public class Driver {
     /**
      * The age of the driver.
      *
-     * @implNote The constraint belongs to {@link Minimal}, not to the default group, and is reached only through
-     *         the group sequence this class declares, which puts {@code Minimal} first.
+     * @implNote The constraint belongs to {@link Minimal}, not to the default group, and is reached only
+     *         through the group sequence this class declares, which puts {@code Minimal} first.
      */
     @Min(value = 18, groups = Minimal.class)
     private int age;

@@ -1,7 +1,7 @@
 package com.github.jinahya.object.randomizer.spec.validation.french_zip_code;
 
-import com.github.jinahya.object.randomizer.ObjectRandomizerUtils;
 import com.github.jinahya.object.randomizer.FixtureMonkeyObjectRandomizer;
+import com.github.jinahya.object.randomizer.ObjectRandomizerUtils;
 import com.navercorp.fixturemonkey.ArbitraryBuilder;
 
 /**
@@ -35,6 +35,7 @@ public class Address_Randomizer_FixtureMonkey
     public Address_Randomizer_FixtureMonkey() {
         super(Address.class, Address_Randomizer_Constants.EXCLUDED_FIELDS);
     }
+
     /**
      * {@inheritDoc}
      *

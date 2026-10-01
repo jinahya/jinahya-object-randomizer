@@ -17,8 +17,8 @@ class Address_Test {
 
     /**
      * The one test which proves the {@code src/test/java-jakarta-ee-NN} source roots are wired up: the specification
-     * version compiled into {@link Address} has to be the one the active profile selected, which surefire hands in as
-     * a system property.
+     * version compiled into {@link Address} has to be the one the active profile selected, which surefire hands in as a
+     * system property.
      */
     @DisplayName("the Address under test is the one of the active profile's specification")
     @Test

@@ -7,8 +7,8 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * The zip code every randomizer of {@link Address} in this package writes for itself.
  * <p>
- * It is a class of static methods, rather than a base class or an interface, because neither of those can carry it.
- * A base class cannot: each flavor already extends the class of its engine, and Java has one superclass. An interface
+ * It is a class of static methods, rather than a base class or an interface, because neither of those can carry it. A
+ * base class cannot: each flavor already extends the class of its engine, and Java has one superclass. An interface
  * cannot either, and it is worth being precise about why -- a {@code default} method loses to a class method of the
  * same signature, so a mixin declaring {@code get()} would be silently ignored by a randomizer which inherits
  * {@code get()} from its engine, with nothing failing to say so.

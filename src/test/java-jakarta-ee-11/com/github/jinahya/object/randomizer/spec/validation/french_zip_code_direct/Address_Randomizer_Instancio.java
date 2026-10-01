@@ -24,11 +24,12 @@ public class Address_Randomizer_Instancio
     public Address_Randomizer_Instancio() {
         super(Address.class, Address_Randomizer_Constants.EXCLUDED_FIELDS);
     }
+
     /**
      * {@inheritDoc}
      *
-     * @return a randomized instance whose {@code zipCode} satisfies the {@code @Pattern} on it, which the engine
-     *         alone does not read.
+     * @return a randomized instance whose {@code zipCode} satisfies the {@code @Pattern} on it, which the engine alone
+     *         does not read.
      * @implSpec The engine populates the instance first, and {@link ZipCodes#repaired(Address) repaired} then
      *         writes the one field it filled without reading the pattern.
      */

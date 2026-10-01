@@ -1,7 +1,7 @@
 package com.github.jinahya.object.randomizer.spec.validation.address;
 
-import com.github.jinahya.object.randomizer.ObjectRandomizerUtils;
 import com.github.jinahya.object.randomizer.FixtureMonkeyObjectRandomizer;
+import com.github.jinahya.object.randomizer.ObjectRandomizerUtils;
 
 /**
  * A Fixture Monkey randomizer of {@link Address}.

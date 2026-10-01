@@ -36,9 +36,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         {@code @Constraint(validatedBy = FrenchZipCodeValidator.class)}, and then never publishes that validator --
  *         it is referenced five times across the chapter and defined nowhere, in either generation. An empty
  *         {@code validatedBy} is the specification's own form for a constraint which is nothing but its composition;
- *         the {@code @EmmanuelsEmail} example two listings later declares exactly {@code @Constraint(validatedBy =
- *         {})}. The composing constraints, which are the whole of what this constraint does to a value, are
- *         untouched.
+ *         the {@code @EmmanuelsEmail} example two listings later declares exactly
+ *         {@code @Constraint(validatedBy = {})}. The composing constraints, which are the whole of what this constraint
+ *         does to a value, are untouched.
  * @see Address
  * @see <a href="https://jakarta.ee/specifications/bean-validation/3.1/jakarta-validation-spec-3.1
  *         .html#constraintsdefinitionimplementation-constraintcomposition">Jakarta Validation 3.1, Constraint

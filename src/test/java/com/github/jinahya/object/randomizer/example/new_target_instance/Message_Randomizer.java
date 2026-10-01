@@ -32,8 +32,8 @@ public class Message_Randomizer
      * {@inheritDoc}
      *
      * @return a new {@link Message} on {@link #CHANNEL}.
-     * @implSpec The default would look for a no-argument constructor, which {@link Message} does not declare, so
-     *         the instance is constructed here and handed to the engine to fill.
+     * @implSpec The default would look for a no-argument constructor, which {@link Message} does not declare,
+     *         so the instance is constructed here and handed to the engine to fill.
      */
     @Override
     protected Message newTargetInstance() {

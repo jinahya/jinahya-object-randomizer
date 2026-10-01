@@ -1,7 +1,7 @@
 package com.github.jinahya.object.randomizer.spec.validation.french_zip_code;
 
-import com.github.jinahya.object.randomizer.ObjectRandomizerUtils;
 import com.github.jinahya.object.randomizer.InstancioObjectRandomizer;
+import com.github.jinahya.object.randomizer.ObjectRandomizerUtils;
 
 /**
  * A Instancio randomizer of {@link Address}.
@@ -32,11 +32,12 @@ public class Address_Randomizer_Instancio
     public Address_Randomizer_Instancio() {
         super(Address.class, Address_Randomizer_Constants.EXCLUDED_FIELDS);
     }
+
     /**
      * {@inheritDoc}
      *
-     * @return a randomized instance whose {@code zipCode} satisfies {@link FrenchZipCode}, which the engine alone
-     *         does not reach.
+     * @return a randomized instance whose {@code zipCode} satisfies {@link FrenchZipCode}, which the engine alone does
+     *         not reach.
      * @implSpec The engine populates the instance first, and {@link FrenchZipCodes#repaired(Address) repaired}
      *         then writes the one field it could not.
      */

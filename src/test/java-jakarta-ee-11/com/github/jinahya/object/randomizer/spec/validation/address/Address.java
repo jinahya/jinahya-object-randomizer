@@ -13,10 +13,10 @@ import jakarta.validation.constraints.Size;
  * specification itself publishes, rather than one invented in a unit test.
  * <p>
  * Everything belonging to a specification is declared under that specification's own
- * {@code src/test/java-jakarta-ee-NN} source root -- this class, its randomizers, and their tests alike -- and only
- * the root of the active {@code jakarta-ee-NN} profile is compiled.
- * Nothing is shared between the generations, even where two copies happen to have the same signature: a specification
- * is free to change one of them without the other, and the split is what keeps that from becoming a conflict.
+ * {@code src/test/java-jakarta-ee-NN} source root -- this class, its randomizers, and their tests alike -- and only the
+ * root of the active {@code jakarta-ee-NN} profile is compiled. Nothing is shared between the generations, even where
+ * two copies happen to have the same signature: a specification is free to change one of them without the other, and
+ * the split is what keeps that from becoming a conflict.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @implNote Two things the specification declares are deliberately absent. Its {@code @ZipCode} field

@@ -1,7 +1,7 @@
 package com.github.jinahya.object.randomizer.spec.validation.address;
 
-import com.github.jinahya.object.randomizer.ObjectRandomizerUtils;
 import com.github.jinahya.object.randomizer.InstancioObjectRandomizer;
+import com.github.jinahya.object.randomizer.ObjectRandomizerUtils;
 
 /**
  * An Instancio randomizer of {@link Address}.

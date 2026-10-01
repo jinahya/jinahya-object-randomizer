@@ -16,9 +16,9 @@ public final class Driver_Randomizer_Constants {
     /**
      * The attributes every randomizer of {@link Driver} leaves alone; none.
      * <p>
-     * It is empty by choice rather than by necessity: the Jakarta Validation 3.0 specification puts no
-     * {@code @NotNull} on {@code car}, so excluding it would leave a valid instance. It would also take the cascade
-     * out of the example, which is half of what {@link Driver} is here to measure, so nothing is excluded.
+     * It is empty by choice rather than by necessity: the Jakarta Validation 3.0 specification puts no {@code @NotNull}
+     * on {@code car}, so excluding it would leave a valid instance. It would also take the cascade out of the example,
+     * which is half of what {@link Driver} is here to measure, so nothing is excluded.
      */
     public static final List<String> EXCLUDED_FIELDS = List.of();
 

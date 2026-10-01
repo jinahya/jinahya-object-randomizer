@@ -4,8 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Verifies that the PODAM flavor is wired up against {@link Driver}, the class the Jakarta Validation 3.0
- * specification publishes.
+ * Verifies that the PODAM flavor is wired up against {@link Driver}, the class the Jakarta Validation 3.0 specification
+ * publishes.
  * <p>
  * What the contract is, and how it is checked, belong to {@link Driver_Randomized_Verifier}, so that this class says
  * only which engine it is about.

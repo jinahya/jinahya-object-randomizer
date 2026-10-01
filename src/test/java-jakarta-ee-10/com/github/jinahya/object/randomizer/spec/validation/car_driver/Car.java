@@ -12,10 +12,10 @@ import jakarta.validation.constraints.NotNull;
  * fields, the constraints on them, and the {@link GroupSequence} which redefines the default group are the
  * specification's.
  * <p>
- * The group sequence is what makes this class worth randomizing: {@code roadWorthy} is constrained in the
- * {@link Later} group, which no caller here requests, and yet validating the default group reaches it, because the
- * sequence puts {@code Later} after {@code Car}. An engine which reads only the constraints of the default group
- * produces an instance the specification rejects.
+ * The group sequence is what makes this class worth randomizing: {@code roadWorthy} is constrained in the {@link Later}
+ * group, which no caller here requests, and yet validating the default group reaches it, because the sequence puts
+ * {@code Later} after {@code Car}. An engine which reads only the constraints of the default group produces an instance
+ * the specification rejects.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @implNote Accessors are added, which the specification's class does not declare -- its listing says only
@@ -63,8 +63,8 @@ public class Car {
     /**
      * Whether the car is road worthy.
      *
-     * @implNote The constraint belongs to {@link Later}, not to the default group, and is reached only through the
-     *         group sequence this class declares.
+     * @implNote The constraint belongs to {@link Later}, not to the default group, and is reached only through
+     *         the group sequence this class declares.
      */
     @AssertTrue(groups = Later.class)
     private Boolean roadWorthy;

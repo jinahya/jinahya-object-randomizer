@@ -5,8 +5,8 @@ import com.github.jinahya.object.randomizer.PodamObjectRandomizer;
 /**
  * A PODAM randomizer of {@link Address}.
  * <p>
- * PODAM reads the {@code @Size} on the field -- it draws exactly five characters -- and not the {@code @Pattern}
- * beside it, which {@code PodamObjectRandomizer} documents: a {@code @Pattern} yields {@code null}, and where another
+ * PODAM reads the {@code @Size} on the field -- it draws exactly five characters -- and not the {@code @Pattern} beside
+ * it, which {@code PodamObjectRandomizer} documents: a {@code @Pattern} yields {@code null}, and where another
  * constraint has already settled the value, it is simply left unread. So {@link #get()} is overridden to write a zip
  * code the pattern accepts.
  *
@@ -25,11 +25,12 @@ public class Address_Randomizer_Podam
     public Address_Randomizer_Podam() {
         super(Address.class, Address_Randomizer_Constants.EXCLUDED_FIELDS);
     }
+
     /**
      * {@inheritDoc}
      *
-     * @return a randomized instance whose {@code zipCode} satisfies the {@code @Pattern} on it, which the engine
-     *         alone does not read.
+     * @return a randomized instance whose {@code zipCode} satisfies the {@code @Pattern} on it, which the engine alone
+     *         does not read.
      * @implSpec The engine populates the instance first, and {@link ZipCodes#repaired(Address) repaired} then
      *         writes the one field it filled without reading the pattern.
      */

@@ -8,8 +8,8 @@ import java.util.List;
 /**
  * The base randomizer of {@link Record}, which excludes its {@code id}.
  * <p>
- * It is written to be extended: the constructor an extending randomizer calls takes the names that randomizer adds,
- * and merges them with {@link #EXCLUDED_FIELDS} through
+ * It is written to be extended: the constructor an extending randomizer calls takes the names that randomizer adds, and
+ * merges them with {@link #EXCLUDED_FIELDS} through
  * {@link ObjectRandomizerUtils#moreExcludedFields(Iterable, Iterable) moreExcludedFields}. A subclass therefore names
  * only what is its own, and stays correct when this class comes to exclude something more.
  *
