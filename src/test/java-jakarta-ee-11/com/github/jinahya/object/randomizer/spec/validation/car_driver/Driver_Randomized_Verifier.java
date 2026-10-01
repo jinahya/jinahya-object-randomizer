@@ -1,24 +1,22 @@
 package com.github.jinahya.object.randomizer.spec.validation.car_driver;
 
 import com.github.jinahya.object.randomizer.ObjectRandomizer;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 
+import static com.github.jinahya.object.randomizer._Validation_Test_Utils.assertValid;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Verifications of a <em>randomized</em> {@link Driver} -- of the value, that is, not of whatever produced it.
  * <p>
- * The contract splits in two. {@link #verify(Driver)} is what every flavor owes: the fields are filled, the
- * cascaded {@link Car} included. {@link #verifyValid(ObjectRandomizer)} adds that the value satisfies the
- * constraints the specification declares, and every flavor here owes that too.
+ * The contract splits in two. {@link #verify(Driver)} is what every flavor owes: the fields are filled, the cascaded
+ * {@link Car} included. {@link #verifyValid(ObjectRandomizer)} adds that the value satisfies the constraints the
+ * specification declares, and every flavor here owes that too.
  * <p>
  * The two halves are not independent here, which is why neither stands alone. {@code @AssertTrue} holds for
- * {@code null}, as a constraint which leaves the null check to {@code @NotNull} must, and the specification declares
- * no {@code @NotNull} on {@code passedDrivingTest}, on {@code roadWorthy}, or on {@code car}. An engine which filled
- * none of the three would draw no violation at all; it is {@link #verify(Driver)} which keeps that empty pass from
- * counting as constraint support.
+ * {@code null}, as a constraint which leaves the null check to {@code @NotNull} must, and the specification declares no
+ * {@code @NotNull} on {@code passedDrivingTest}, on {@code roadWorthy}, or on {@code car}. An engine which filled none
+ * of the three would draw no violation at all; it is {@link #verify(Driver)} which keeps that empty pass from counting
+ * as constraint support.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @see Driver_Randomizer_Constants
@@ -36,22 +34,6 @@ public final class Driver_Randomized_Verifier {
      *         {@code @AssertTrue} still draws {@code true} half the time.
      */
     private static final int DRAWS = 32;
-
-    /**
-     * Holds the validator factory, so that it is built once, and only when a test actually validates.
-     */
-    private static final class ValidatorHolder {
-
-        private static final ValidatorFactory FACTORY = Validation.buildDefaultValidatorFactory();
-
-        private ValidatorHolder() {
-            throw new AssertionError("instantiation is not allowed");
-        }
-    }
-
-    private static Validator validator() {
-        return ValidatorHolder.FACTORY.getValidator();
-    }
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -77,14 +59,12 @@ public final class Driver_Randomized_Verifier {
      *
      * @param randomizer the randomizer to draw from.
      * @apiNote Validating the default group is enough to reach all of them: {@link Driver} and {@link Car} each
-     *         redefine their default group as a sequence, which is what carries the validation into {@link Minimal}
-     *         and {@link Later}.
+     *         redefine their default group as a sequence, which is what carries the validation into {@link Minimal} and
+     *         {@link Later}.
      */
     public static void verifyValid(final ObjectRandomizer<Driver> randomizer) {
-        final var validator = validator();
         for (int i = 0; i < DRAWS; i++) {
-            final var value = verify(randomizer.get());
-            assertThat(validator.validate(value)).as("violations of draw #%d: %s", i, value).isEmpty();
+            assertValid(verify(randomizer.get()));
         }
     }
 

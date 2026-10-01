@@ -1,30 +1,25 @@
 package com.github.jinahya.object.randomizer;
 
 import com.navercorp.fixturemonkey.jakarta.validation.plugin.JakartaValidationPlugin;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import org.instancio.settings.Keys;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github.jinahya.object.randomizer._Validation_Test_Utils.assertValid;
 
 /**
  * Tests which flavors honor {@code jakarta.validation.constraints} on a target class, and how each is turned on.
  * <p>
- * The API alone is what an engine reads the constraints through; the reference implementation, which these tests build
- * a {@link Validator} from, is what decides whether the instance an engine produced actually satisfies them. Both, and
- * the platform generation they belong to, are chosen by the active {@code jakarta-ee-NN} profile, so this class is what
- * that profile exists to exercise.
+ * The API alone is what an engine reads the constraints through; the reference implementation, which
+ * {@link _Validation_Test_Utils} reaches a validator from, is what decides whether the instance an engine produced
+ * actually satisfies them. Both, and the platform generation they belong to, are chosen by the active
+ * {@code jakarta-ee-NN} profile, so this class is what that profile exists to exercise.
  * <p>
  * {@link EasyRandomObjectRandomizer} is deliberately absent: Easy Random 6 removed its constraint support outright, so
  * there is no configuration under which it would pass, and asserting that it <em>fails</em> would be asserting on a
@@ -118,20 +113,9 @@ class AbstractObjectRandomizer_BeanValidation_Test {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    private static ValidatorFactory factory;
-
-    @BeforeAll
-    static void openValidatorFactory() {
-        factory = Validation.buildDefaultValidatorFactory();
-    }
-
-    @AfterAll
-    static void closeValidatorFactory() {
-        factory.close();
-    }
 
     /**
-     * The number of instances {@link #assertValid(ObjectRandomizer)} draws.
+     * The number of instances {@link #assertEveryDrawValid(ObjectRandomizer)} draws.
      *
      * @implNote More than one, deliberately: a single draw which happens to satisfy a constraint proves nothing
      *         about an engine which does not read it. A {@code @Min(10) @Max(20) int}, left unconstrained, lands in
@@ -145,15 +129,9 @@ class AbstractObjectRandomizer_BeanValidation_Test {
      *
      * @param randomizer the randomizer to draw from.
      */
-    private static void assertValid(final ObjectRandomizer<Constrained> randomizer) {
-        final var validator = factory.getValidator();
+    private static void assertEveryDrawValid(final ObjectRandomizer<Constrained> randomizer) {
         for (int i = 0; i < DRAWS; i++) {
-            final var instance = randomizer.get();
-            assertThat(instance).isNotNull();
-            assertThat(validator.validate(instance))
-                    .as("violations of draw #%d: name=%s, email=%s, rank=%d",
-                        i, instance.getName(), instance.getEmail(), instance.getRank())
-                    .isEmpty();
+            assertValid(randomizer.get());
         }
     }
 
@@ -161,18 +139,18 @@ class AbstractObjectRandomizer_BeanValidation_Test {
     @DisplayName("PodamObjectRandomizer.get() -> an instance which satisfies its constraints, unconfigured")
     @Test
     void get_Valid_OfPodam() {
-        assertValid(new ConstrainedPodamRandomizer());
+        assertEveryDrawValid(new ConstrainedPodamRandomizer());
     }
 
     @DisplayName("InstancioObjectRandomizer.get() -> an instance which satisfies its constraints, once enabled")
     @Test
     void get_Valid_OfInstancioWithBeanValidationEnabled() {
-        assertValid(new ConstrainedInstancioRandomizer());
+        assertEveryDrawValid(new ConstrainedInstancioRandomizer());
     }
 
     @DisplayName("FixtureMonkeyObjectRandomizer.get() -> an instance which satisfies its constraints, with the plugin")
     @Test
     void get_Valid_OfFixtureMonkeyWithTheJakartaValidationPlugin() {
-        assertValid(new ConstrainedFixtureMonkeyRandomizer());
+        assertEveryDrawValid(new ConstrainedFixtureMonkeyRandomizer());
     }
 }

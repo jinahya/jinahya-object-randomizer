@@ -1,10 +1,8 @@
 package com.github.jinahya.object.randomizer.spec.validation.french_zip_code;
 
 import com.github.jinahya.object.randomizer.ObjectRandomizer;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 
+import static com.github.jinahya.object.randomizer._Validation_Test_Utils.assertValid;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -35,22 +33,6 @@ public final class Address_Randomized_Verifier {
      */
     private static final int DRAWS = 32;
 
-    /**
-     * Holds the validator factory, so that it is built once, and only when a test actually validates.
-     */
-    private static final class ValidatorHolder {
-
-        private static final ValidatorFactory FACTORY = Validation.buildDefaultValidatorFactory();
-
-        private ValidatorHolder() {
-            throw new AssertionError("instantiation is not allowed");
-        }
-    }
-
-    private static Validator validator() {
-        return ValidatorHolder.FACTORY.getValidator();
-    }
-
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
@@ -72,10 +54,8 @@ public final class Address_Randomized_Verifier {
      * @param randomizer the randomizer to draw from.
      */
     public static void verifyValid(final ObjectRandomizer<Address> randomizer) {
-        final var validator = validator();
         for (int i = 0; i < DRAWS; i++) {
-            final var value = verify(randomizer.get());
-            assertThat(validator.validate(value)).as("violations of draw #%d: %s", i, value).isEmpty();
+            assertValid(verify(randomizer.get()));
         }
     }
 

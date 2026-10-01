@@ -1,12 +1,9 @@
 package com.github.jinahya.object.randomizer.spec.validation.car_driver;
 
-import jakarta.validation.Validation;
-import jakarta.validation.ValidatorFactory;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.github.jinahya.object.randomizer._Validation_Test_Utils.validate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -14,8 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@link Car} declare are live, and that the cascade between them carries.
  * <p>
  * This is what gives a randomizer's green result its meaning: a constraint the validator never reaches cannot be told
- * apart from one an engine satisfies, so each constraint which only a sequence reaches is failed here on purpose,
- * with a hand-made value.
+ * apart from one an engine satisfies, so each constraint which only a sequence reaches is failed here on purpose, with
+ * a hand-made value.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
@@ -23,18 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
         "java:S101" // Class names should comply with a naming convention
 })
 class Driver_Test {
-
-    private static ValidatorFactory factory;
-
-    @BeforeAll
-    static void openValidatorFactory() {
-        factory = Validation.buildDefaultValidatorFactory();
-    }
-
-    @AfterAll
-    static void closeValidatorFactory() {
-        factory.close();
-    }
 
     /**
      * Verifies that the group sequence {@link Driver} declares is live.
@@ -47,7 +32,7 @@ class Driver_Test {
     void validate_Violates_AgeBelowMinimum() {
         final var driver = newValidDriver();
         driver.setAge(16);
-        assertThat(factory.getValidator().validate(driver))
+        assertThat(validate(driver))
                 .singleElement()
                 .satisfies(v -> assertThat(v.getPropertyPath()).hasToString("age"));
     }
@@ -63,7 +48,7 @@ class Driver_Test {
     void validate_Violates_CarNotRoadWorthy() {
         final var driver = newValidDriver();
         driver.getCar().setRoadWorthy(false);
-        assertThat(factory.getValidator().validate(driver))
+        assertThat(validate(driver))
                 .singleElement()
                 .satisfies(v -> assertThat(v.getPropertyPath()).hasToString("car.roadWorthy"));
     }
@@ -76,7 +61,7 @@ class Driver_Test {
         driver.setAge(18);
         driver.setPassedDrivingTest(true);
         driver.setCar(car);
-        assertThat(factory.getValidator().validate(driver)).as("the fixture itself is valid").isEmpty();
+        assertThat(validate(driver)).as("the fixture itself is valid").isEmpty();
         return driver;
     }
 }
