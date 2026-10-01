@@ -1,5 +1,11 @@
 # jinahya-object-randomizer
 
+[![Java CI with Maven](https://github.com/jinahya/jinahya-object-randomizer/actions/workflows/maven.yml/badge.svg)](https://github.com/jinahya/jinahya-object-randomizer/actions/workflows/maven.yml)
+[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=jinahya_jinahya-object-randomizer&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jinahya_jinahya-object-randomizer)
+
+[![Maven Central Version](https://img.shields.io/maven-central/v/io.github.jinahya/jinahya-object-randomizer)](https://central.sonatype.com/artifact/io.github.jinahya/jinahya-object-randomizer)
+[![javadoc](https://javadoc.io/badge2/io.github.jinahya/jinahya-object-randomizer/javadoc.svg)](https://javadoc.io/doc/io.github.jinahya/jinahya-object-randomizer)
+
 Randomizes instances of arbitrary classes with [PODAM][podam], [Instancio][instancio] or
 [Fixture Monkey][fixture-monkey], behind one interface, with the randomizer of a target class
 located by a naming convention.
