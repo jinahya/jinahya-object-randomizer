@@ -79,9 +79,10 @@ with the constraint support.
 
 Nothing in `src/main` references the API, so it is **test scope only**: an engine reads a target
 class's constraints reflectively, and a consumer that annotates its own classes already has the API
-on its classpath. PODAM's support is partial — a lone `@Max` is ignored and `@Pattern` yields
-`null` — so read `PodamObjectRandomizer`'s Javadoc before trusting a randomized instance to be a
-valid one.
+on its classpath. PODAM's support is partial — a lone `@Max` is ignored, `@Pattern` yields `null`,
+and two constraints on one field are honored one at a time, so a field carrying both `@Size` and
+`@Email` gets a string of the right length and no address — so read `PodamObjectRandomizer`'s
+Javadoc before trusting a randomized instance to be a valid one.
 
 ### `jakarta-ee-NN` profiles
 
@@ -208,6 +209,63 @@ Note also that `org.glassfish:jakarta.el` is the superseded expression-language 
 Finally, `fixture-monkey-javax-validation` is the wrong artifact for this platform — the `javax`
 annotations are not the ones any of these engines read.
 
+## Links
+
+### This module
+
+- [Source][repo] · [Issues][issues]
+- [Maven Central][central] — `io.github.jinahya:jinahya-object-randomizer`
+- [Javadoc][javadoc]
+
+### PODAM
+
+- [Site][podam] · [Source][podam-src]
+- [Maven Central][podam-central] — `uk.co.jemos.podam:podam`
+
+### Instancio
+
+- [Site][instancio] · [User guide][instancio-guide] · [Source][instancio-src]
+- [Maven Central][instancio-central] — `org.instancio:instancio-core`
+
+### Fixture Monkey
+
+- [Site][fixture-monkey] · [Source][fixture-monkey-src]
+- [Maven Central][fixture-monkey-central] — `com.navercorp.fixturemonkey:fixture-monkey`
+- [Maven Central][fixture-monkey-validation-central] — `com.navercorp.fixturemonkey:fixture-monkey-jakarta-validation`,
+  the second artifact, without which constraints are ignored
+- [naver/fixture-monkey#1350][fixture-monkey-1350] — the upstream issue for the `compile`-scope EE 9
+  stack that second artifact brings with it, asking for Hibernate Validator and Jakarta EL to be
+  declared test-only there
+- [jqwik] — arrives transitively with `fixture-monkey`, as a second JUnit Platform `TestEngine`
+
+### Bean validation
+
+- Jakarta Validation — [3.1][jakarta-validation-31] (EE 11, the default profile) · [3.0][jakarta-validation-30] (EE 10)
+- Jakarta EE platform — [11][jakarta-ee-11] · [10][jakarta-ee-10]
+- [Hibernate Validator][hibernate-validator] — the single implementation; [reference guide][hibernate-validator-docs]
+- [Expressly][expressly] — the expression language Hibernate Validator 8 and 9 expect, superseding `org.glassfish:jakarta.el`
+
+[repo]: https://github.com/jinahya/jinahya-object-randomizer
+[issues]: https://github.com/jinahya/jinahya-object-randomizer/issues
+[central]: https://central.sonatype.com/artifact/io.github.jinahya/jinahya-object-randomizer
+[javadoc]: https://javadoc.io/doc/io.github.jinahya/jinahya-object-randomizer
 [podam]: https://mtedone.github.io/podam/
+[podam-src]: https://github.com/mtedone/podam
+[podam-central]: https://central.sonatype.com/artifact/uk.co.jemos.podam/podam
 [instancio]: https://www.instancio.org
-[fixture-monkey]: https://naver.github.io/fixture-monkey
+[instancio-guide]: https://www.instancio.org/user-guide/
+[instancio-src]: https://github.com/instancio/instancio
+[instancio-central]: https://central.sonatype.com/artifact/org.instancio/instancio-core
+[fixture-monkey]: https://naver.github.io/fixture-monkey/
+[fixture-monkey-src]: https://github.com/naver/fixture-monkey
+[fixture-monkey-central]: https://central.sonatype.com/artifact/com.navercorp.fixturemonkey/fixture-monkey
+[fixture-monkey-validation-central]: https://central.sonatype.com/artifact/com.navercorp.fixturemonkey/fixture-monkey-jakarta-validation
+[fixture-monkey-1350]: https://github.com/naver/fixture-monkey/issues/1350
+[jqwik]: https://jqwik.net/
+[jakarta-validation-31]: https://jakarta.ee/specifications/bean-validation/3.1/
+[jakarta-validation-30]: https://jakarta.ee/specifications/bean-validation/3.0/
+[jakarta-ee-11]: https://jakarta.ee/specifications/platform/11/
+[jakarta-ee-10]: https://jakarta.ee/specifications/platform/10/
+[hibernate-validator]: https://hibernate.org/validator/
+[hibernate-validator-docs]: https://docs.jboss.org/hibernate/validator/9.0/reference/en-US/html_single/
+[expressly]: https://github.com/eclipse-ee4j/expressly

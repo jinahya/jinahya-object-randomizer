@@ -36,8 +36,10 @@ import java.util.List;
  * @implNote Constraint support is partial, and is keyed to the <em>field</em>: an annotation declared on a
  *         getter, or on a setter, is not seen, even though the value is written through the setter. Of those verified
  *         against PODAM 8.0.2, {@code @Size}, {@code @Email}, {@code @Past}, and a {@code @Min}/ {@code @Max} pair are
- *         honored, while a lone {@code @Max} is ignored and {@code @Pattern} yields {@code null}. Do not take a
- *         randomized instance to be a valid one without validating it.
+ *         honored, while a lone {@code @Max} is ignored and {@code @Pattern} yields {@code null}. Those which are
+ *         honored are honored <em>one at a time</em>: a field carrying both a {@code @Size} and an {@code @Email}
+ *         yields a string of the constrained length and no address, in either declaration order, the {@code @Email}
+ *         having been dropped. Do not take a randomized instance to be a valid one without validating it.
  * @see <a href="https://mtedone.github.io/podam/">PODAM</a>
  * @see InstancioObjectRandomizer
  * @see FixtureMonkeyObjectRandomizer
