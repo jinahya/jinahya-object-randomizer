@@ -19,18 +19,16 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # one run per Jakarta EE generation and validation provider; each profile pins its
-    # own platform BOM, provider and Expressly, and compiles its own src/test/java-jakarta-ee-NN
+    # one run per Jakarta EE generation and validation provider; jakarta-ee-NN pins the
+    # platform BOM and Expressly, and compiles its own src/test/java-jakarta-ee-NN, while
+    # jakarta-ee-NN-PROVIDER puts the one provider of that generation on the classpath
     strategy:
       fail-fast: false
       matrix:
-        profile:
-          - jakarta-ee-11-hibernate-validator
-          - jakarta-ee-11-apache-bval
-          - jakarta-ee-10-hibernate-validator
-          - jakarta-ee-10-apache-bval
+        generation: [ jakarta-ee-11, jakarta-ee-10 ]
+        provider: [ hibernate-validator, apache-bval ]
 
-    name: build (${{ matrix.profile }})
+    name: build (${{ matrix.generation }}, ${{ matrix.provider }})
 
     steps:
     - uses: actions/checkout@v7
@@ -41,10 +39,10 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn -B package --file pom.xml -P ${{ matrix.profile }}
+      run: mvn -B package --file pom.xml -P ${{ matrix.generation }},${{ matrix.generation }}-${{ matrix.provider }}
 
   # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-  # Submitted once, from the default profile, so the four profiles do not overwrite each other's snapshot
+  # Submitted once, from the default profile, so the four builds do not overwrite each other's snapshot
   dependency-graph:
 
     runs-on: ubuntu-latest

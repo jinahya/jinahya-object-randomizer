@@ -58,49 +58,33 @@
     <version.maven.failsafe>${version.maven.surefire}</version.maven.failsafe>
     <!-- the engines; each is provided, and a consumer brings exactly the one it uses -->
     <version.com.navercorp.fixturemonkey>1.2.3</version.com.navercorp.fixturemonkey>
-    <version.org.instancio>6.0.1</version.org.instancio>
+    <version.org.instancio>6.1.0</version.org.instancio>
     <version.org.jeasy>6.0.1</version.org.jeasy>
     <version.uk.co.jemos.podam>8.0.2.RELEASE</version.uk.co.jemos.podam>
 
-    <!-- Jakarta Bean Validation, and its implementations, are test-scope only: no class here references the API,
-         and an engine reads a target class's constraints reflectively. The build has two axes, though, the platform
-         generation and the provider, so the versions below move together and a profile overrides them; see the
-         profiles. The defaults are Jakarta EE 11's, which is what jakarta-ee-11-* selects. -->
-    <!-- the generation of the active profile; it names the src/test/java-jakarta-ee-NN root compiled -->
-    <jakarta.ee.version>11</jakarta.ee.version>
-    <!-- https://jakarta.ee/specifications/platform/11/ -->
-    <!-- https://central.sonatype.com/artifact/jakarta.platform/jakarta.jakartaee-bom/versions -->
-    <!-- 11.0.0 manages: jakarta.validation-api 3.1.1 -->
-    <version.jakarta.jakartaee-bom>11.0.0</version.jakarta.jakartaee-bom>
-    <!-- the Jakarta Validation specification of the active generation; surefire hands it to the tests, so that
-         a test can assert it compiled against the src/test/java-jakarta-ee-NN copy it was meant to -->
-    <jakarta.validation.spec.version>3.1</jakarta.validation.spec.version>
-    <!-- https://hibernate.org/validator/releases/ -->
-    <!-- https://central.sonatype.com/artifact/org.hibernate.validator/hibernate-validator/versions -->
-    <!-- https://docs.jboss.org/hibernate/validator/9.0/reference/en-US/html_single/#validator-gettingstarted-uel -->
-    <!-- hibernate-validator: 9 / expressly: 6 -->
-    <version.org.hibernate.validator>9.1.3.Final</version.org.hibernate.validator>
-    <!-- https://bval.apache.org/ -->
-    <!-- https://central.sonatype.com/artifact/org.apache.bval/bval-jsr/versions -->
-    <!-- bval-jsr 3.1 implements Jakarta Validation 3.1 (EE 11); 3.0.1 and later 3.0 (EE 10) -->
-    <version.org.apache.bval>3.1.0</version.org.apache.bval>
-    <!-- the expression language, whichever the provider; each reaches it through the jakarta.el API -->
-    <!-- https://central.sonatype.com/artifact/org.glassfish.expressly/expressly -->
-    <version.org.glassfish.expressly>6.0.0</version.org.glassfish.expressly>
+    <!-- Jakarta Bean Validation, its expression language, and its implementations, are test-scope only: no class
+         here references the API, and an engine reads a target class's constraints reflectively. Every one of their
+         versions is set by the two profiles active together, a jakarta-ee-NN and a jakarta-ee-NN-PROVIDER, and by
+         nothing here, so that a build with either half missing has no version to fall back to; see <profiles>.
+         The links, for when one of them moves:
+         https://central.sonatype.com/artifact/jakarta.platform/jakarta.jakartaee-bom/versions
+         https://central.sonatype.com/artifact/org.glassfish.expressly/expressly/versions
+         https://central.sonatype.com/artifact/org.hibernate.validator/hibernate-validator/versions
+         https://central.sonatype.com/artifact/org.apache.bval/bval-jsr/versions -->
 
     <version.org.jspecify>1.0.1</version.org.jspecify>
 
-    <!-- adds the generation-specific test source root of the active jakarta-ee-NN-* profile -->
+    <!-- adds the generation-specific test source root of the active jakarta-ee-NN profile -->
     <!-- https://central.sonatype.com/artifact/org.codehaus.mojo/build-helper-maven-plugin/versions -->
     <version.build-helper-maven-plugin>3.6.2</version.build-helper-maven-plugin>
 
-    <version.ch.qos.logback>1.6.3</version.ch.qos.logback>
+    <version.ch.qos.logback>1.6.5</version.ch.qos.logback>
     <version.org.assertj>4.0.0-M1</version.org.assertj>
-    <version.org.junit>5.14.4</version.org.junit>
-    <version.org.mockito>5.23.0</version.org.mockito>
+    <version.org.junit>6.1.3</version.org.junit>
+    <version.org.mockito>5.24.0</version.org.mockito>
     <!-- test-scope only, and on the annotation processor path of the test compilation alone; see <build> -->
     <version.org.projectlombok>1.18.48</version.org.projectlombok>
-    <version.org.slf4j>2.0.19</version.org.slf4j>
+    <version.org.slf4j>2.0.20</version.org.slf4j>
   </properties>
 
   <dependencyManagement>
@@ -150,8 +134,8 @@
                     its classpath and the others are never loaded. Easy Random is among them although its flavor is
                     package-private: the class still compiles against the engine.
          test     - the test tooling, and everything Jakarta: no class in main references Jakarta Bean Validation,
-                    and every Jakarta version, and the provider, is pinned by the active jakarta-ee-NN-* profile;
-                    see <profiles>. -->
+                    and every Jakarta version, the expression language and the provider are pinned by the active
+                    jakarta-ee-NN and jakarta-ee-NN-PROVIDER profiles; see <profiles>. -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
@@ -216,15 +200,8 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- the expression language the provider resolves message templates with, under either provider -->
-    <dependency>
-      <groupId>org.glassfish.expressly</groupId>
-      <artifactId>expressly</artifactId>
-      <version>${version.org.glassfish.expressly}</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- the provider, which is what checks that what an engine produced satisfies the constraints, is declared by
-         the active profile; see <profiles> -->
+    <!-- the expression language, and the provider, which is what checks that what an engine produced satisfies the
+         constraints, are declared by the active profiles; see <profiles> -->
     <!-- engine -->
     <dependency>
       <groupId>org.instancio</groupId>
@@ -344,6 +321,31 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
+      <!-- fails the build, in the validate phase, unless a jakarta-ee-NN-PROVIDER is active, and of the generation of
+           the jakarta-ee-NN beside it. A build with no jakarta-ee-NN never gets this far: the BOM it imports has no
+           version, and Maven rejects the model first; see <profiles> -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-jakarta-ee-profiles</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireProperty>
+                  <property>jakarta.validation.provider.ee.version</property>
+                  <message>no jakarta-ee-NN-PROVIDER profile is active; activate one, beside a jakarta-ee-NN, e.g. -Pjakarta-ee-11,jakarta-ee-11-hibernate-validator</message>
+                  <regex>${jakarta.ee.version}</regex>
+                  <regexMessage>the jakarta-ee-NN-PROVIDER profile active is of Jakarta EE ${jakarta.validation.provider.ee.version}, and the jakarta-ee-NN one of Jakarta EE ${jakarta.ee.version}; activate the two of one generation</regexMessage>
+                </requireProperty>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <!-- adds src/test/java-jakarta-ee-NN, of the active profile's generation, as a test source root -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -368,33 +370,84 @@
   </build>
 
   <profiles>
-    <!-- ======================================= Jakarta EE generation x provider ============ -->
+    <!-- ======================================= Jakarta EE generation ======================= -->
     <!-- Two implementation axes, both test-only ones: nothing in main references Jakarta Bean
-         Validation. A profile picks one of each, and is named jakarta-ee-NN-PROVIDER.
-         - The GENERATION moves the versions aligned with it: the platform BOM, which pins
-           jakarta.validation-api, and the releases of the provider and of Expressly. It also
-           names src/test/java-jakarta-ee-NN, the test source root compiled, where everything
-           belonging to a specification lives: the example classes it publishes, their
-           randomizers and their tests. The generations share nothing, even where two copies
-           have the same signature, so that one specification can move without disturbing the
-           other.
-         - The PROVIDER is the one implementation put on the test classpath: Hibernate
-           Validator, the reference implementation, or Apache BVal. The tests reach it only
-           through the default bootstrap, so they do not change with it; surefire hands its
-           class name in, and a test asserts it is the one, and only, provider found.
-           Expressly stays the expression language under either.
-         The defaults in <properties> are jakarta-ee-11-hibernate-validator's, which is active
-         when no other profile is. Exactly one of the four is meant to be active: with none, no
-         provider is on the classpath; with two, the generations or the providers collide. -->
+         Validation. They are two kinds of profile, and a build activates one of each, of the
+         same generation:
+
+           -Pjakarta-ee-10,jakarta-ee-10-apache-bval
+
+         jakarta-ee-NN is the GENERATION, and is not meant to be active alone. It sets what
+         every provider of the generation shares: the platform BOM, which pins both
+         jakarta.validation-api and jakarta.el-api; Expressly, the expression language under
+         either provider; and src/test/java-jakarta-ee-NN, the test source root compiled, where
+         everything belonging to a specification lives. The generations share nothing, even
+         where two copies have the same signature, so that one specification can move without
+         disturbing the other.
+
+         jakarta-ee-NN-PROVIDER is the one implementation put on the test classpath: Hibernate
+         Validator, the reference implementation, or Apache BVal, at the release aligned with
+         the generation. The tests reach it only through the default bootstrap, so they do not
+         change with it; surefire hands its class name in, and a test asserts it is the one,
+         and only, provider found.
+
+         jakarta-ee-11 and jakarta-ee-11-hibernate-validator are active when no profile is
+         named; naming any profile turns both off, so a build names both of its two. One with
+         no jakarta-ee-NN fails as Maven builds the model, the BOM having no version; one with
+         no jakarta-ee-NN-PROVIDER, or with two of different generations, fails on the
+         enforcer. -->
     <profile>
-      <id>jakarta-ee-11-hibernate-validator</id>
+      <id>jakarta-ee-11</id>
       <!-- https://jakarta.ee/specifications/platform/11/ -->
-      <!-- jakarta.validation-api 3.1.1 / hibernate-validator 9 / expressly 6 -->
+      <!-- the BOM 11.0.0 manages jakarta.validation-api 3.1.1 and jakarta.el-api 6.0.1 -->
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
+        <jakarta.ee.version>11</jakarta.ee.version>
+        <version.jakarta.jakartaee-bom>11.0.0</version.jakarta.jakartaee-bom>
+        <jakarta.validation.spec.version>3.1</jakarta.validation.spec.version>
+        <version.org.glassfish.expressly>6.0.0</version.org.glassfish.expressly>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.glassfish.expressly</groupId>
+          <artifactId>expressly</artifactId>
+          <version>${version.org.glassfish.expressly}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>jakarta-ee-10</id>
+      <!-- https://jakarta.ee/specifications/platform/10/ -->
+      <!-- the BOM 10.0.0 manages jakarta.validation-api 3.0.2 and jakarta.el-api 5.0.1 -->
+      <properties>
+        <jakarta.ee.version>10</jakarta.ee.version>
+        <version.jakarta.jakartaee-bom>10.0.0</version.jakarta.jakartaee-bom>
+        <jakarta.validation.spec.version>3.0</jakarta.validation.spec.version>
+        <version.org.glassfish.expressly>5.0.0</version.org.glassfish.expressly>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.glassfish.expressly</groupId>
+          <artifactId>expressly</artifactId>
+          <version>${version.org.glassfish.expressly}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <!-- ======================================= Jakarta Validation provider ================= -->
+    <profile>
+      <id>jakarta-ee-11-hibernate-validator</id>
+      <!-- hibernate-validator 9 implements Jakarta Validation 3.1 -->
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <jakarta.validation.provider.ee.version>11</jakarta.validation.provider.ee.version>
         <jakarta.validation.provider>org.hibernate.validator.HibernateValidator</jakarta.validation.provider>
+        <version.org.hibernate.validator>9.1.4.Final</version.org.hibernate.validator>
       </properties>
       <dependencies>
         <dependency>
@@ -407,10 +460,11 @@
     </profile>
     <profile>
       <id>jakarta-ee-11-apache-bval</id>
-      <!-- https://jakarta.ee/specifications/platform/11/ -->
-      <!-- jakarta.validation-api 3.1.1 / bval-jsr 3.1 / expressly 6 -->
+      <!-- bval-jsr 3.1 implements Jakarta Validation 3.1 -->
       <properties>
+        <jakarta.validation.provider.ee.version>11</jakarta.validation.provider.ee.version>
         <jakarta.validation.provider>org.apache.bval.jsr.ApacheValidationProvider</jakarta.validation.provider>
+        <version.org.apache.bval>3.1.0</version.org.apache.bval>
       </properties>
       <dependencies>
         <dependency>
@@ -423,15 +477,11 @@
     </profile>
     <profile>
       <id>jakarta-ee-10-hibernate-validator</id>
-      <!-- https://jakarta.ee/specifications/platform/10/ -->
-      <!-- jakarta.validation-api 3.0.2 / hibernate-validator 8 / expressly 5 -->
+      <!-- hibernate-validator 8 implements Jakarta Validation 3.0 -->
       <properties>
-        <jakarta.ee.version>10</jakarta.ee.version>
-        <version.jakarta.jakartaee-bom>10.0.0</version.jakarta.jakartaee-bom>
-        <jakarta.validation.spec.version>3.0</jakarta.validation.spec.version>
-        <version.org.glassfish.expressly>5.0.0</version.org.glassfish.expressly>
-        <version.org.hibernate.validator>8.0.3.Final</version.org.hibernate.validator>
+        <jakarta.validation.provider.ee.version>10</jakarta.validation.provider.ee.version>
         <jakarta.validation.provider>org.hibernate.validator.HibernateValidator</jakarta.validation.provider>
+        <version.org.hibernate.validator>8.0.5.Final</version.org.hibernate.validator>
       </properties>
       <dependencies>
         <dependency>
@@ -444,15 +494,11 @@
     </profile>
     <profile>
       <id>jakarta-ee-10-apache-bval</id>
-      <!-- https://jakarta.ee/specifications/platform/10/ -->
-      <!-- jakarta.validation-api 3.0.2 / bval-jsr 3.0 / expressly 5 -->
+      <!-- bval-jsr 3.0.1 and later implement Jakarta Validation 3.0; 3.0.0's manifest still declares 2.0 -->
       <properties>
-        <jakarta.ee.version>10</jakarta.ee.version>
-        <version.jakarta.jakartaee-bom>10.0.0</version.jakarta.jakartaee-bom>
-        <jakarta.validation.spec.version>3.0</jakarta.validation.spec.version>
-        <version.org.glassfish.expressly>5.0.0</version.org.glassfish.expressly>
-        <version.org.apache.bval>3.0.2</version.org.apache.bval>
+        <jakarta.validation.provider.ee.version>10</jakarta.validation.provider.ee.version>
         <jakarta.validation.provider>org.apache.bval.jsr.ApacheValidationProvider</jakarta.validation.provider>
+        <version.org.apache.bval>3.0.2</version.org.apache.bval>
       </properties>
       <dependencies>
         <dependency>

@@ -34,7 +34,7 @@ import jakarta.validation.constraints.Size;
 public class Address {
 
     /**
-     * The Jakarta EE generation this copy was taken from; {@code 3.1}, of {@code jakarta-ee-11-*}.
+     * The Jakarta EE generation this copy was taken from; {@code 3.1}, of {@code jakarta-ee-11}.
      */
     public static final String SPECIFICATION_VERSION = "3.1";
 
