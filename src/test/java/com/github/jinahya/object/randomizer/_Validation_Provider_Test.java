@@ -22,8 +22,9 @@ class _Validation_Provider_Test {
      * The one test which proves the provider axis of the {@code jakarta-ee-NN-PROVIDER} profiles is wired up. The
      * providers are listed the way the specification's default resolver discovers them, as services of
      * {@link ValidationProvider}; exactly one has to be found, and it has to be the one the active profile names, which
-     * surefire hands in as a system property. With two found, which one {@code Validation.buildDefaultValidatorFactory()}
-     * picks is not decided by the specification, so a second one is a failure, not a curiosity.
+     * surefire hands in as a system property. With two found, which one
+     * {@code Validation.buildDefaultValidatorFactory()} picks is not decided by the specification, so a second one is a
+     * failure, not a curiosity.
      */
     @DisplayName("the one validation provider found is the one of the active profile")
     @Test
