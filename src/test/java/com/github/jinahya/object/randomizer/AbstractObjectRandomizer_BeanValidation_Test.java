@@ -16,10 +16,10 @@ import static com.github.jinahya.object.randomizer._Validation_Test_Utils.assert
 /**
  * Tests which flavors honor {@code jakarta.validation.constraints} on a target class, and how each is turned on.
  * <p>
- * The API alone is what an engine reads the constraints through; the reference implementation, which
- * {@link _Validation_Test_Utils} reaches a validator from, is what decides whether the instance an engine produced
- * actually satisfies them. Both, and the platform generation they belong to, are chosen by the active
- * {@code jakarta-ee-NN} profile, so this class is what that profile exists to exercise.
+ * The API alone is what an engine reads the constraints through; the provider, which {@link _Validation_Test_Utils}
+ * reaches a validator from, is what decides whether the instance an engine produced actually satisfies them. Both, and
+ * the platform generation they belong to, are chosen by the active {@code jakarta-ee-NN-PROVIDER} profile, so this
+ * class is what that profile exists to exercise.
  * <p>
  * {@link EasyRandomObjectRandomizer} is deliberately absent: Easy Random 6 removed its constraint support outright, so
  * there is no configuration under which it would pass, and asserting that it <em>fails</em> would be asserting on a

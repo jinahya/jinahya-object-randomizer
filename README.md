@@ -90,22 +90,72 @@ and two constraints on one field are honored one at a time, so a field carrying 
 `@Email` gets a string of the right length and no address — so read `PodamObjectRandomizer`'s
 Javadoc before trusting a randomized instance to be a valid one.
 
-### `jakarta-ee-NN` profiles
+### `jakarta-ee-NN-PROVIDER` profiles
 
-The platform generation is the one axis in this build, and it moves three versions together: the
-`jakarta.jakartaee-bom` that pins `jakarta.validation-api`, and the Hibernate Validator and
-Expressly releases aligned with it. Jakarta Validation has a single implementation, so a profile
-picks a *generation*, never an implementation.
+Two axes, both test-only, and a profile picks one of each. The *generation* moves the
+`jakarta.jakartaee-bom` that pins `jakarta.validation-api`, the provider release aligned with it,
+and Expressly. The *provider* is the one Jakarta Validation implementation on the test classpath:
+Hibernate Validator, the reference implementation, or Apache BVal. Expressly stays the expression
+language under either.
 
-| Profile | `jakarta.validation-api` | Hibernate Validator | Expressly |
+| Profile | `jakarta.validation-api` | Provider | Expressly |
 | --- | --- | --- | --- |
-| `jakarta-ee-11` (default) | 3.1.1 | 9.1.3.Final | 6.0.0 |
-| `jakarta-ee-10` | 3.0.2 | 8.0.3.Final | 5.0.0 |
+| `jakarta-ee-11-hibernate-validator` (default) | 3.1.1 | Hibernate Validator 9.1.3.Final | 6.0.0 |
+| `jakarta-ee-11-apache-bval` | 3.1.1 | Apache BVal 3.1.0 | 6.0.0 |
+| `jakarta-ee-10-hibernate-validator` | 3.0.2 | Hibernate Validator 8.0.3.Final | 5.0.0 |
+| `jakarta-ee-10-apache-bval` | 3.0.2 | Apache BVal 3.0.2 | 5.0.0 |
 
 ```shell
-./mvnw test                      # jakarta-ee-11
-./mvnw -P jakarta-ee-10 test
+./mvnw test                                  # jakarta-ee-11-hibernate-validator
+./mvnw -P jakarta-ee-11-apache-bval test
+./mvnw -P jakarta-ee-10-hibernate-validator test
+./mvnw -P jakarta-ee-10-apache-bval test
 ```
+
+Activate exactly one: with none, no provider is on the classpath, and with two, the generations
+or the providers collide.
+
+## Jakarta EE alignment
+
+Each generation is a set of versions that belong together, not a set of latest releases. The
+platform BOM decides the specification, and every implementation is the release line written
+against that specification:
+
+| | Jakarta EE 10 | Jakarta EE 11 |
+| --- | --- | --- |
+| `jakarta.jakartaee-bom` | 10.0.0 | 11.0.0 |
+| Jakarta Validation | 3.0 | 3.1 |
+| `jakarta.validation-api` (pinned by the BOM) | 3.0.2 | 3.1.1 |
+| Hibernate Validator | 8.0.x (8.0.3.Final) | 9.x (9.1.3.Final) |
+| Apache BVal `bval-jsr` | 3.0.x (3.0.2) | 3.1.x (3.1.0) |
+| Jakarta Expression Language | 5.0 | 6.0 |
+| Expressly | 5.0.x (5.0.0) | 6.0.x (6.0.0) |
+| Test source root | `src/test/java-jakarta-ee-10` | `src/test/java-jakarta-ee-11` |
+
+Where the alignment comes from:
+
+- **Hibernate Validator.** Each release's POM declares the `jakarta.validation-api` it depends on,
+  and its jar manifest declares the specification it implements: 8.0.3.Final depends on 3.0.2 and
+  declares Jakarta Bean Validation 3.0; 9.1.3.Final depends on 3.1.1 and declares Jakarta
+  Validation 3.1.
+- **Apache BVal.** Each release's parent POM pins the `jakarta.validation-api` it builds against,
+  and its jar manifest declares the specification it implements: 3.0.1 and later 3.0 releases
+  build on 3.0.2 and declare Jakarta Bean Validation 3.0; 3.1.0 builds on 3.1.1 and declares
+  Jakarta Validation 3.1. Avoid 3.0.0, which builds on the same API but still declares `2.0` in
+  its manifest.
+- **Expressly.** Expressly 5 implements Jakarta Expression Language 5.0 (EE 10), and Expressly 6
+  implements 6.0 (EE 11). The expression language is the same under both providers. Each provider
+  reaches it only through the `jakarta.el` API, so choosing the EL implementation is not part of
+  choosing a provider.
+
+Nothing outside the profile is allowed to move these versions. `fixture-monkey-jakarta-validation`
+declares a complete Jakarta EE 9 stack at `compile` scope (see [Fixture Monkey](#fixture-monkey)).
+This build excludes all three of its artifacts, so the active profile supplies the API, the
+expression language and the provider. Without the exclusion, Hibernate Validator 7 would be a
+second provider in every `apache-bval` run. `_Validation_Provider_Test` guards against this: it
+asserts that exactly one provider is discovered, and that it is the one the active profile names.
+`Address_Test` does the same for the specification version compiled from the generation's test
+source root.
 
 ## Engines are `provided`
 
@@ -248,8 +298,9 @@ annotations are not the ones any of these engines read.
 
 - Jakarta Validation — [3.1][jakarta-validation-31] (EE 11, the default profile) · [3.0][jakarta-validation-30] (EE 10)
 - Jakarta EE platform — [11][jakarta-ee-11] · [10][jakarta-ee-10]
-- [Hibernate Validator][hibernate-validator] — the single implementation; [reference guide][hibernate-validator-docs]
-- [Expressly][expressly] — the expression language Hibernate Validator 8 and 9 expect, superseding `org.glassfish:jakarta.el`
+- [Hibernate Validator][hibernate-validator] — the reference implementation; [reference guide][hibernate-validator-docs]
+- [Apache BVal][apache-bval] — the second implementation; 3.1 for Jakarta Validation 3.1, 3.0 for 3.0
+- [Expressly][expressly] — the expression language under either provider, superseding `org.glassfish:jakarta.el`
 
 [repo]: https://github.com/jinahya/jinahya-object-randomizer
 [issues]: https://github.com/jinahya/jinahya-object-randomizer/issues
@@ -274,4 +325,5 @@ annotations are not the ones any of these engines read.
 [jakarta-ee-10]: https://jakarta.ee/specifications/platform/10/
 [hibernate-validator]: https://hibernate.org/validator/
 [hibernate-validator-docs]: https://docs.jboss.org/hibernate/validator/9.0/reference/en-US/html_single/
+[apache-bval]: https://bval.apache.org/
 [expressly]: https://github.com/eclipse-ee4j/expressly

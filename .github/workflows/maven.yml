@@ -19,12 +19,16 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # one run per Jakarta EE generation; each profile pins its own platform BOM,
-    # Hibernate Validator and Expressly, and compiles its own src/test/java-jakarta-ee-NN
+    # one run per Jakarta EE generation and validation provider; each profile pins its
+    # own platform BOM, provider and Expressly, and compiles its own src/test/java-jakarta-ee-NN
     strategy:
       fail-fast: false
       matrix:
-        profile: [ jakarta-ee-11, jakarta-ee-10 ]
+        profile:
+          - jakarta-ee-11-hibernate-validator
+          - jakarta-ee-11-apache-bval
+          - jakarta-ee-10-hibernate-validator
+          - jakarta-ee-10-apache-bval
 
     name: build (${{ matrix.profile }})
 
@@ -40,7 +44,7 @@ jobs:
       run: mvn -B package --file pom.xml -P ${{ matrix.profile }}
 
   # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-  # Submitted once, from the default generation, so the two profiles do not overwrite each other's snapshot
+  # Submitted once, from the default profile, so the four profiles do not overwrite each other's snapshot
   dependency-graph:
 
     runs-on: ubuntu-latest

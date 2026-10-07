@@ -24,7 +24,7 @@ class Address_Test {
     @Test
     void specificationVersion_OfTheActiveProfile_() {
         final var expected = System.getProperty("jakarta.validation.spec.version");
-        assertThat(expected).as("the property the active jakarta-ee-NN profile sets").isNotNull();
+        assertThat(expected).as("the property the active jakarta-ee-NN-PROVIDER profile sets").isNotNull();
         assertThat(Address.SPECIFICATION_VERSION)
                 .as("the Address compiled from src/test/java-jakarta-ee-NN")
                 .isEqualTo(expected);
