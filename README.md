@@ -15,8 +15,9 @@ plain class.
 
 ## The convention
 
-For a target class `Foo`, a randomizer is a **sibling** — declared in the same package, beside it —
-named `FooRandomizer`, or `Foo_Randomizer`:
+For a target class `Foo`, a randomizer is a class of the same package *name* — declared in any
+source set, jar or module which the class loader of the target can see — named `FooRandomizer`, or
+`Foo_Randomizer`:
 
 ```java
 class FooRandomizer extends PodamObjectRandomizer<Foo> {
@@ -32,6 +33,16 @@ final var foo = ObjectRandomizerUtils.newRandomizedInstanceOf(Foo.class).orElseT
 
 A located class is instantiated reflectively, so it has to declare an accessible no-argument
 constructor which supplies the target class to its superclass, exactly as above.
+
+The randomizer is located by its fully qualified name, through the class loader of the target
+class, so it need not be compiled with the target: a `FooRandomizer` under `src/test` serves a `Foo`
+under `src/main`. On the module path, though, a package can not be split across named modules, so
+the randomizer belongs to the module of the target, or is patched into it, as test runners do.
+
+A nested target is no exception: the name is the target's binary name plus the postfix, so the
+randomizer of `Outer.Foo` is `Outer.FooRandomizer`, nested beside it in `Outer`. Only the source of
+`Outer` can declare that, so a nested class of `src/main` has to be made top-level to get a
+randomizer under `src/test`.
 
 ## The types
 

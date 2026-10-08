@@ -3,6 +3,7 @@ package com.github.jinahya.object.randomizer;
 import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
 import org.jeasy.random.FieldPredicates;
+import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -56,7 +57,7 @@ abstract class EasyRandomObjectRandomizer<T>
      * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
     EasyRandomObjectRandomizer(final Class<T> targetClass,
-                               final Iterable<String> excludedFields) {
+                               final Iterable<? extends @Nullable String> excludedFields) {
         super(targetClass, excludedFields);
     }
 

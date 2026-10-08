@@ -1,5 +1,6 @@
 package com.github.jinahya.object.randomizer;
 
+import org.jspecify.annotations.Nullable;
 import uk.co.jemos.podam.api.AbstractClassInfoStrategy;
 import uk.co.jemos.podam.api.ClassInfo;
 import uk.co.jemos.podam.api.ClassInfoStrategy;
@@ -59,7 +60,8 @@ public abstract class PodamObjectRandomizer<T>
      *         that is how a located randomizer class is instantiated.
      * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
-    public PodamObjectRandomizer(final Class<T> targetClass, final Iterable<String> excludedFields) {
+    public PodamObjectRandomizer(final Class<T> targetClass,
+                                 final Iterable<? extends @Nullable String> excludedFields) {
         super(targetClass, excludedFields);
     }
 

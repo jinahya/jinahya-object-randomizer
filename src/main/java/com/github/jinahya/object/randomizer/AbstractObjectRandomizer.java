@@ -1,5 +1,7 @@
 package com.github.jinahya.object.randomizer;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,7 +41,8 @@ public abstract class AbstractObjectRandomizer<T>
      *         that is how a located randomizer class is instantiated.
      * @see ObjectRandomizerUtils#moreExcludedFields(Iterable, Iterable)
      */
-    protected AbstractObjectRandomizer(final Class<T> targetClass, final Iterable<String> excludedFields) {
+    protected AbstractObjectRandomizer(final Class<T> targetClass,
+                                       final Iterable<? extends @Nullable String> excludedFields) {
         super();
         Objects.requireNonNull(targetClass, "targetClass is null");
         Objects.requireNonNull(excludedFields, "excludedFields is null");

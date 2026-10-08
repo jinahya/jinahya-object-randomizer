@@ -40,12 +40,15 @@
  * {@link com.github.jinahya.object.randomizer.AbstractObjectRandomizer} references an engine at all.
  *
  * <h2>Conventions</h2>
- * For a target class {@code Foo}, the convention probes {@code FooRandomizer} and then {@code Foo_Randomizer}, both
- * declared beside {@code Foo}. That is the whole rule: a randomizer is a sibling of its target class. A class nested
- * inside another therefore has to be declared as a top-level class to have a randomizer of its own.
+ * For a target class {@code Foo}, the convention probes {@code FooRandomizer} and then {@code Foo_Randomizer}: the
+ * binary name of {@code Foo} with a postfix appended, wherever the class loader of {@code Foo} finds it. That is the
+ * whole rule: a randomizer is a sibling of its target class. For a top-level {@code Foo}, the sibling is a top-level
+ * class of the same package name, in any source set; for a {@code Foo} nested in {@code Outer}, it is
+ * {@code Outer.FooRandomizer}, which only the source of {@code Outer} can declare. A nested class of {@code main}
+ * therefore has to be declared as a top-level class to have a randomizer under {@code test}.
  *
  * <h2>Example</h2>
- * Given a class {@code Foo}, declare, beside it:
+ * Given a class {@code Foo}, declare, in the same package:
  * <pre>{@code
  * class FooRandomizer extends PodamObjectRandomizer<Foo> {
  *     FooRandomizer() {

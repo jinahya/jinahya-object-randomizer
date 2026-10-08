@@ -85,6 +85,33 @@ class ObjectRandomizerUtils_Convention_Test {
         }
     }
 
+    // --------------------------------------------- a nested target class, whose randomizer is nested beside it, in the
+    // --------------------------------------------- same enclosing class: the sibling the convention does consult
+    static class Host {
+
+        static class Guest {
+
+        }
+
+        static class GuestRandomizer
+                extends AbstractObjectRandomizer<Guest> {
+
+            GuestRandomizer() {
+                super(Guest.class, List.of());
+            }
+
+            @Override
+            public Guest get() {
+                return new Guest();
+            }
+        }
+
+        // a nested target class whose only would-be randomizer is the top-level StrayRandomizer of this package
+        static class Stray {
+
+        }
+    }
+
     // ------------------------------------------------------------------------------ one which follows no convention
     static class Bare {
 
@@ -205,10 +232,25 @@ class ObjectRandomizerUtils_Convention_Test {
     }
 
     @DisplayName("locateStandard(Outer.Inner.class) -> empty;"
-                 + " the enclosing chain is not consulted, so a nested target class has no randomizer")
+                 + " the enclosing chain is not consulted, so OuterRandomizer.InnerRandomizer is no sibling")
     @Test
     void standard_Empty_EnclosingChainNotConsulted() {
         assertThat(ObjectRandomizerUtils.randomizerClassOf(Outer.Inner.class)).isEmpty();
+    }
+
+    @DisplayName("locateStandard(Host.Guest.class) -> Host.GuestRandomizer; a nested sibling is located")
+    @Test
+    void standard_NestedSibling_Guest() {
+        assertThat(ObjectRandomizerUtils.randomizerClassOf(Host.Guest.class)).contains(Host.GuestRandomizer.class);
+    }
+
+    @DisplayName("locateStandard(Host.Stray.class) -> empty;"
+                 + " a top-level class named after a nested target class is no sibling of it")
+    @Test
+    void standard_Empty_TopLevelNamedAfterNested() throws ClassNotFoundException {
+        // the stray exists, so the emptiness is the convention's, and not a missing class's
+        assertThat(Class.forName(getClass().getPackageName() + ".StrayRandomizer")).isNotNull();
+        assertThat(ObjectRandomizerUtils.randomizerClassOf(Host.Stray.class)).isEmpty();
     }
 
     @DisplayName("locateStandard(Bare.class) -> empty")

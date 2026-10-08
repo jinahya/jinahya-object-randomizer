@@ -5,6 +5,7 @@ import org.instancio.InstancioObjectApi;
 import org.instancio.Select;
 import org.instancio.settings.Keys;
 import org.instancio.settings.Settings;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An abstract randomizer which randomizes instances using <a href="https://www.instancio.org">Instancio</a>.
@@ -60,7 +61,8 @@ public abstract class InstancioObjectRandomizer<T>
      *         that is how a located randomizer class is instantiated.
      * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
-    public InstancioObjectRandomizer(final Class<T> targetClass, final Iterable<String> excludedFields) {
+    public InstancioObjectRandomizer(final Class<T> targetClass,
+                                     final Iterable<? extends @Nullable String> excludedFields) {
         super(targetClass, excludedFields);
     }
 

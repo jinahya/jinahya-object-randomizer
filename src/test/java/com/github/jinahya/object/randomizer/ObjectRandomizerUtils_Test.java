@@ -120,6 +120,30 @@ class ObjectRandomizerUtils_Test {
     }
 
     /**
+     * A class whose conventionally named randomizer breaks the contract of {@link ObjectRandomizer#get() get()}, and
+     * produces nothing at all.
+     */
+    static class Hollow {
+
+    }
+
+    static class HollowRandomizer
+            extends AbstractObjectRandomizer<Hollow> {
+
+        HollowRandomizer() {
+            super(Hollow.class, List.of());
+        }
+
+        @Override
+        @SuppressWarnings({
+                "java:S2637" // the contract is broken on purpose
+        })
+        public Hollow get() {
+            return null;
+        }
+    }
+
+    /**
      * A class whose conventionally named sibling exists, but is not an {@link ObjectRandomizer} at all: a fault the
      * probe deliberately does not judge, so that it is reported where the role is known.
      */
@@ -224,5 +248,12 @@ class ObjectRandomizerUtils_Test {
     @Test
     void newRandomizedInstanceOf_Empty_RandomizerProducesAnUnrelatedClass() {
         assertThat(ObjectRandomizerUtils.newRandomizedInstanceOf(Unrelated.class)).isEmpty();
+    }
+
+    @DisplayName("newRandomizedInstanceOf(Hollow.class) -> empty;"
+                 + " HollowRandomizer produces null, so nothing is handed back")
+    @Test
+    void newRandomizedInstanceOf_Empty_RandomizerProducesNull() {
+        assertThat(ObjectRandomizerUtils.newRandomizedInstanceOf(Hollow.class)).isEmpty();
     }
 }

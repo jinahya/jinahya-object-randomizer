@@ -1,5 +1,7 @@
 package com.github.jinahya.object.randomizer;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,19 +12,24 @@ import java.util.Optional;
  * Utilities for {@link ObjectRandomizer}.
  *
  * <h2>The naming convention</h2>
- * A randomizer is found for a target class by name. The randomizer class is a <em>sibling</em> of the target &mdash;
- * declared in the same package, beside it &mdash; which implements {@link ObjectRandomizer} and carries a postfix of
- * either {@code "Randomizer"} or {@code "_Randomizer"}. For a target class {@code Foo}, that is {@code FooRandomizer},
- * probed first, and then {@code Foo_Randomizer}.
+ * A randomizer is found for a target class by name. The randomizer class is a <em>sibling</em> of the target, which
+ * implements {@link ObjectRandomizer} and whose binary name is the binary name of the target followed by a postfix of
+ * either {@code "Randomizer"} or {@code "_Randomizer"}. For a top-level target class {@code Foo}, that is a top-level
+ * {@code FooRandomizer} of the same package name, probed first, and then {@code Foo_Randomizer}; for a target class
+ * {@code Outer.Foo}, nested in {@code Outer}, it is {@code Outer.FooRandomizer}, nested beside it in {@code Outer}.
  * <p>
- * The convention spans source sets: a {@code Foo} declared in {@code main} and a {@code FooRandomizer} declared in
- * {@code test} are the same package, and both are on the test classpath.
+ * The name is resolved through the class loader of the target, so, for a top-level target, the convention spans source
+ * sets, jars and modules alike: a {@code Foo} declared in {@code main} and a {@code FooRandomizer} declared in
+ * {@code test} share the package name, and both are on the test classpath. On the module path, though, a package can
+ * not be split across named modules, so the randomizer belongs to the module of the target, or is patched into it, as
+ * test runners do.
  * <p>
  * A class which is not a sibling of the target is never located: neither a local nor an anonymous class, which can not
- * carry the required name, nor a class nested inside the target, which would have to be declared in the source of the
- * target itself. A class nested in a target class of {@code main} therefore has to be declared as a top-level class to
- * be randomizable here. Note that a subclass of a class which has a randomizer is located by the convention, and not by
- * the randomizer of its superclass, which could not produce instances of the subclass anyway.
+ * carry the required name, nor a class nested inside the target, nor a top-level class named after a nested target. A
+ * nested sibling has to be declared in the source of the enclosing class; a class nested in a class of {@code main}
+ * therefore has to be declared as a top-level class to be randomizable from {@code test}. Note that a subclass of a
+ * class which has a randomizer is located by the convention, and not by the randomizer of its superclass, which could
+ * not produce instances of the subclass anyway.
  * <p>
  * A located class is instantiated reflectively, and so has to declare an accessible no-argument constructor which
  * supplies the target class to its superclass.
@@ -65,13 +72,14 @@ public final class ObjectRandomizerUtils {
      *         {@link AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable) randomizer constructor} strips
      *         them, drops the blank and the {@code null} ones, and deduplicates the rest.
      */
-    public static Iterable<String> moreExcludedFields(final Iterable<String> excludedFields,
-                                                      final Iterable<String> moreExcludedFields) {
+    public static Iterable<@Nullable String> moreExcludedFields(
+            final Iterable<? extends @Nullable String> excludedFields,
+            final Iterable<? extends @Nullable String> moreExcludedFields) {
         Objects.requireNonNull(excludedFields, "excludedFields is null");
         Objects.requireNonNull(moreExcludedFields, "moreExcludedFields is null");
         // a plain list, rather than a stream concatenation: null elements are carried through, so List.copyOf and
         // Collectors.toUnmodifiableList are both out, and the randomizer constructor is what drops them
-        final var merged = new ArrayList<String>();
+        final var merged = new ArrayList<@Nullable String>();
         excludedFields.forEach(merged::add);
         moreExcludedFields.forEach(merged::add);
         return Collections.unmodifiableList(merged);
@@ -190,8 +198,23 @@ public final class ObjectRandomizerUtils {
      */
     public static <T> Optional<T> newRandomizedInstanceOf(final Class<T> targetClass) {
         return newRandomizerInstanceOf(targetClass)
-                .map(ObjectRandomizer::get)
-                .filter(targetClass::isInstance);
+                .map(r -> {
+                    final var instance = r.get();
+                    if (instance == null) {
+                        // the contract of get() promises an instance; one which hands back nothing is broken
+                        logger.log(System.Logger.Level.WARNING, "produced null; randomizer: {0}, target: {1}",
+                                   r, targetClass);
+                        return null;
+                    }
+                    if (!targetClass.isInstance(instance)) {
+                        // erasure let this through at compile time; dropped, as documented, but worth seeing
+                        logger.log(System.Logger.Level.WARNING,
+                                   "produced an incompatible instance; class: {0}, randomizer: {1}, target: {2}",
+                                   instance.getClass(), r, targetClass);
+                        return null;
+                    }
+                    return targetClass.cast(instance);
+                });
     }
 
     // ---------------------------------------------------------------------------------------------------------------------

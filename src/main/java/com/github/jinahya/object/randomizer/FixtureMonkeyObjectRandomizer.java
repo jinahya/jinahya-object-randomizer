@@ -93,7 +93,8 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
      *         that is how a located randomizer class is instantiated.
      * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
-    public FixtureMonkeyObjectRandomizer(final Class<T> targetClass, final Iterable<String> excludedFields) {
+    public FixtureMonkeyObjectRandomizer(final Class<T> targetClass,
+                                         final Iterable<? extends @Nullable String> excludedFields) {
         super(targetClass, excludedFields);
     }
 
