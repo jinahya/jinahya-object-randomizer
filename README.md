@@ -270,6 +270,27 @@ versions instead of excluding.
 Note also that `org.glassfish:jakarta.el` is the superseded expression-language implementation;
 `org.glassfish.expressly:expressly` is its successor and what Hibernate Validator 8 and 9 expect.
 
+For the second, import `junit-bom`. Fixture Monkey also brings an older `junit-platform-engine`, at
+the same depth as the one Jupiter brings, and Maven takes whichever is declared first; with
+`fixture-monkey` declared ahead of `junit-jupiter`, a JUnit 6 run then fails to start, with a
+`NoClassDefFoundError` for `org/junit/platform/engine/support/store/NamespacedHierarchicalStore`. The
+BOM pins every JUnit artifact, the transitive ones included, to one version. Excluding is no fix,
+for jqwik is how Fixture Monkey generates its values:
+
+```xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.junit</groupId>
+      <artifactId>junit-bom</artifactId>
+      <version><!-- your JUnit version --></version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+```
+
 Finally, `fixture-monkey-javax-validation` is the wrong artifact for this platform — the `javax`
 annotations are not the ones any of these engines read.
 
