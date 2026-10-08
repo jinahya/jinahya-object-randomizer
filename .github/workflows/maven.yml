@@ -41,6 +41,30 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml -P ${{ matrix.generation }},${{ matrix.generation }}-${{ matrix.provider }}
 
+  # main targets Java 17 while the tests above are written for, and run on, Java 25; this builds a consumer per
+  # engine, each bringing that engine alone, and runs it on Java 17. The library itself is still built on 25
+  smoke:
+
+    runs-on: ubuntu-latest
+
+    name: smoke (Java 17, one engine each)
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK 17 and 25
+      uses: actions/setup-java@v6
+      with:
+        # the last one listed is the default; the other is exported as JAVA_HOME_17_X64
+        java-version: |
+          17
+          25
+        distribution: 'temurin'
+        cache: maven
+    - name: Install the library with JDK 25
+      run: mvn -B install -DskipTests --file pom.xml -P jakarta-ee-11,jakarta-ee-11-hibernate-validator
+    - name: Build the consumers with JDK 17
+      run: JAVA_HOME="$JAVA_HOME_17_X64" src/smoke/run.sh
+
   # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
   # Submitted once, from the default profile, so the four builds do not overwrite each other's snapshot
   dependency-graph:
