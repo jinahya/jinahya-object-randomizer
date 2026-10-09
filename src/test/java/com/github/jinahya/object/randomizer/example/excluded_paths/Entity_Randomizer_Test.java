@@ -1,4 +1,4 @@
-package com.github.jinahya.object.randomizer.example.excluded_fields;
+package com.github.jinahya.object.randomizer.example.excluded_paths;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

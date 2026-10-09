@@ -1,4 +1,4 @@
-package com.github.jinahya.object.randomizer.example.more_excluded_fields;
+package com.github.jinahya.object.randomizer.example.more_excluded_paths;
 
 import com.github.jinahya.object.randomizer.ObjectRandomizerUtils;
 import com.github.jinahya.object.randomizer.PodamObjectRandomizer;
@@ -10,7 +10,7 @@ import java.util.List;
  * <p>
  * It is written to be extended: the constructor an extending randomizer calls takes the names that randomizer adds, and
  * merges them with {@link #EXCLUDED_FIELDS} through
- * {@link ObjectRandomizerUtils#moreExcludedFields(Iterable, Iterable) moreExcludedFields}. A subclass therefore names
+ * {@link ObjectRandomizerUtils#moreExcludedPaths(Iterable, Iterable) moreExcludedPaths}. A subclass therefore names
  * only what is its own, and stays correct when this class comes to exclude something more.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
@@ -37,9 +37,9 @@ public class Record_Randomizer
     /**
      * Creates a new instance which excludes the specified names as well as {@link #EXCLUDED_FIELDS}.
      *
-     * @param moreExcludedFields the names to exclude in addition.
+     * @param moreExcludedPaths the names to exclude in addition.
      */
-    protected Record_Randomizer(final Iterable<String> moreExcludedFields) {
-        super(Record.class, ObjectRandomizerUtils.moreExcludedFields(EXCLUDED_FIELDS, moreExcludedFields));
+    protected Record_Randomizer(final Iterable<String> moreExcludedPaths) {
+        super(Record.class, ObjectRandomizerUtils.moreExcludedPaths(EXCLUDED_FIELDS, moreExcludedPaths));
     }
 }

@@ -1,10 +1,11 @@
 package com.github.jinahya.object.randomizer;
 
-import org.jspecify.annotations.Nullable;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -61,28 +62,28 @@ public final class ObjectRandomizerUtils {
     private static final String[] POSTFIXES = {"Randomizer", "_Randomizer"};
 
     /**
-     * Merges specified iterables of excluded fields.
+     * Merges specified iterables of excluded paths.
      *
-     * @param excludedFields     the first iterable of excluded fields.
-     * @param moreExcludedFields the second iterable of excluded fields.
-     * @return an {@link Iterable} of merged excluded fields.
-     * @throws NullPointerException when either argument is {@code null}.
+     * @param excludedPaths     the first iterable of excluded paths.
+     * @param moreExcludedPaths the second iterable of excluded paths.
+     * @return an unmodifiable {@link Iterable} of merged excluded paths.
+     * @throws NullPointerException when either argument is {@code null}, or when an element of either is
+     *                              {@code null}.
      * @apiNote This method is for a subclass which adds to the exclusions of the randomizer it extends.
-     *         Elements are concatenated as they are, in order, with neither deduplication nor validation; the
+     *         Elements are concatenated as they are, in order, with no deduplication; the
      *         {@link AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable) randomizer constructor} strips
-     *         them, drops the blank and the {@code null} ones, and deduplicates the rest.
+     *         them, rejects a blank one, and deduplicates the rest.
      */
-    public static Iterable<@Nullable String> moreExcludedFields(
-            final Iterable<? extends @Nullable String> excludedFields,
-            final Iterable<? extends @Nullable String> moreExcludedFields) {
-        Objects.requireNonNull(excludedFields, "excludedFields is null");
-        Objects.requireNonNull(moreExcludedFields, "moreExcludedFields is null");
-        // a plain list, rather than a stream concatenation: null elements are carried through, so List.copyOf and
-        // Collectors.toUnmodifiableList are both out, and the randomizer constructor is what drops them
-        final var merged = new ArrayList<@Nullable String>();
-        excludedFields.forEach(merged::add);
-        moreExcludedFields.forEach(merged::add);
-        return Collections.unmodifiableList(merged);
+    public static Iterable<String> moreExcludedPaths(
+            final @NotNull Iterable<@NotBlank String> excludedPaths,
+            final @NotNull Iterable<@NotBlank String> moreExcludedPaths) {
+        Objects.requireNonNull(excludedPaths, "excludedPaths is null");
+        Objects.requireNonNull(moreExcludedPaths, "moreExcludedPaths is null");
+        final var merged = new ArrayList<String>();
+        excludedPaths.forEach(merged::add);
+        moreExcludedPaths.forEach(merged::add);
+        // List.copyOf rejects a null element, as the randomizer constructor would
+        return List.copyOf(merged);
     }
 
     // -----------------------------------------------------------------------------------------------------------------

@@ -223,7 +223,7 @@ class AbstractObjectRandomizer_Test {
     /**
      * This flavor fills a {@code null} field, and a primitive still at its default, and nothing else; a value the
      * constructor has already assigned survives without being named in
-     * {@link AbstractObjectRandomizer#excludedFields excludedFields}.
+     * {@link AbstractObjectRandomizer#excludedPaths excludedPaths}.
      */
     @DisplayName("InstancioObjectRandomizer.get() -> an already assigned value, though nothing is excluded")
     @Test

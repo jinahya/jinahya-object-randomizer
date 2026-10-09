@@ -5,6 +5,8 @@ import com.navercorp.fixturemonkey.FixtureMonkey;
 import com.navercorp.fixturemonkey.api.introspector.FieldReflectionArbitraryIntrospector;
 import com.navercorp.fixturemonkey.api.plugin.Plugin;
 import com.navercorp.fixturemonkey.api.property.DefaultPropertyGenerator;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
@@ -18,7 +20,7 @@ import java.util.Objects;
  * no accessors at all. Unlike {@link InstancioObjectRandomizer}, it does not use {@link #newTargetInstance()}: the
  * engine constructs the instance itself, so an override of that method has no say. It does, however, go through a
  * <em>no-argument constructor</em>, so a value which that constructor, or a field initializer, assigns is in place
- * before the fields are written, and an excluded field keeps it.
+ * before the fields are written, and an excluded slot keeps it.
  * <p>
  * It is also the flavor whose builder a subclass can drive declaratively: override {@link #getArbitraryBuilder()} and
  * set, fix, or post-condition a property by name before it is sampled.
@@ -86,23 +88,26 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
      * Creates a new instance for initializing a randomized instance of the specified class.
      *
      * @param targetClass    the class to be randomized.
-     * @param excludedFields fields to be excluded from randomization; {@code null}, and blank, elements are dropped,
-     *                       and the rest are stripped and deduplicated.
-     * @throws NullPointerException when either argument is {@code null}.
+     * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of
+     *                      {@code .} and white space, and rejoined with {@code .}, so that {@code " a . b "},
+     *                      {@code "a..b"}, and {@code "a b"} are all {@code "a.b"}; duplicates are dropped.
+     * @throws NullPointerException     when either argument is {@code null}, or when an element is {@code null}.
+     * @throws IllegalArgumentException when an element is left with no segment, as {@code ""}, {@code "  "}, and
+     *                                  {@code "."} are.
      * @apiNote A subclass is expected to declare a no-argument constructor which supplies both arguments, for
      *         that is how a located randomizer class is instantiated.
      * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
-    public FixtureMonkeyObjectRandomizer(final Class<T> targetClass,
-                                         final Iterable<? extends @Nullable String> excludedFields) {
-        super(targetClass, excludedFields);
+    public FixtureMonkeyObjectRandomizer(final @NotNull Class<T> targetClass,
+                                         final @NotNull Iterable<@NotBlank String> excludedPaths) {
+        super(targetClass, excludedPaths);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * Creates a new engine which writes fields reflectively and which generates no property named in
-     * {@link #excludedFields}.
+     * Creates a new engine which writes fields reflectively and which generates no property named by a simple path of
+     * {@link #excludedPaths}.
      *
      * @return a new engine.
      * @implNote The exclusions are applied by replacing the property generator for the {@link #targetClass},
@@ -119,6 +124,10 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
      *         {@link com.navercorp.fixturemonkey.FixtureMonkeyBuilder#defaultNotNull(boolean) defaultNotNull} keeps an
      *         association from being sampled as {@code null}. The {@code JakartaValidationPlugin} is registered here
      *         too, when the artifact which carries it is on the classpath.
+     *         <p>
+     *         A property generator sees a property, not where in the object graph it is, so nested paths can not be
+     *         expressed here; nor by the builder's {@code setNull(String)}, which would overwrite what a constructor
+     *         assigned rather than keep it. {@link #get()} resets them once the engine is done.
      * @implSpec An override which does not build on what this method returns gives up the exclusions, and the
      *         plugin, along with them.
      * @see FixtureMonkey#builder()
@@ -131,7 +140,7 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
                         targetClass,
                         property -> DefaultPropertyGenerator.FIELD_METHOD_PROPERTY_GENERATOR
                                 .generateChildProperties(property).stream()
-                                .filter(child -> !excludedFields.contains(child.getName()))
+                                .filter(child -> !excludedPaths.contains(child.getName()))
                                 .toList()
                 );
         if (PluginHolder.INSTANCE != null) {
@@ -160,11 +169,13 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
      * @return {@inheritDoc}
      * @throws NullPointerException when the engine samples {@code null}, which it does for a type it can not
      *                              introspect.
-     * @implSpec Samples a new instance from the {@link #getArbitraryBuilder() arbitraryBuilder}.
+     * @implSpec Samples a new instance from the {@link #getArbitraryBuilder() arbitraryBuilder}, and
+     *         {@link #resetNestedExcludedPaths(Object) resets} the slots which nested excluded paths name.
      * @see ArbitraryBuilder#sample()
      */
     @Override
     public T get() {
-        return Objects.requireNonNull(getArbitraryBuilder().sample(), "Fixture Monkey returned null");
+        return resetNestedExcludedPaths(
+                Objects.requireNonNull(getArbitraryBuilder().sample(), "Fixture Monkey returned null"));
     }
 }

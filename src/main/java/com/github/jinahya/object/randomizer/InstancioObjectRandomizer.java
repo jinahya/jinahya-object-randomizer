@@ -1,11 +1,12 @@
 package com.github.jinahya.object.randomizer;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.instancio.Instancio;
 import org.instancio.InstancioObjectApi;
 import org.instancio.Select;
 import org.instancio.settings.Keys;
 import org.instancio.settings.Settings;
-import org.jspecify.annotations.Nullable;
 
 /**
  * An abstract randomizer which randomizes instances using <a href="https://www.instancio.org">Instancio</a>.
@@ -18,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  * <strong>A value already assigned is kept.</strong> Only a {@code null} field, and a primitive still at its
  * default, is filled; whatever a constructor, or an override of {@link #newTargetInstance()}, has assigned survives. A
  * generated identifier deliberately initialized to a sentinel value is therefore preserved even when it is not named in
- * {@link #excludedFields}.
+ * {@link #excludedPaths}.
  * <p>
  * <strong>Bean validation constraints are honored.</strong> Instancio reads
  * {@code jakarta.validation.constraints} — the Jakarta annotations, not the {@code javax} ones — once
@@ -54,16 +55,19 @@ public abstract class InstancioObjectRandomizer<T>
      * Creates a new instance for initializing a randomized instance of the specified class.
      *
      * @param targetClass    the class to be randomized.
-     * @param excludedFields fields to be excluded from randomization; {@code null}, and blank, elements are dropped,
-     *                       and the rest are stripped and deduplicated.
-     * @throws NullPointerException when either argument is {@code null}.
+     * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of
+     *                      {@code .} and white space, and rejoined with {@code .}, so that {@code " a . b "},
+     *                      {@code "a..b"}, and {@code "a b"} are all {@code "a.b"}; duplicates are dropped.
+     * @throws NullPointerException     when either argument is {@code null}, or when an element is {@code null}.
+     * @throws IllegalArgumentException when an element is left with no segment, as {@code ""}, {@code "  "}, and
+     *                                  {@code "."} are.
      * @apiNote A subclass is expected to declare a no-argument constructor which supplies both arguments, for
      *         that is how a located randomizer class is instantiated.
      * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
-    public InstancioObjectRandomizer(final Class<T> targetClass,
-                                     final Iterable<? extends @Nullable String> excludedFields) {
-        super(targetClass, excludedFields);
+    public InstancioObjectRandomizer(final @NotNull Class<T> targetClass,
+                                     final @NotNull Iterable<@NotBlank String> excludedPaths) {
+        super(targetClass, excludedPaths);
     }
 
 //SEP8//
@@ -86,7 +90,8 @@ public abstract class InstancioObjectRandomizer<T>
     }
 
     /**
-     * Creates a population API for the specified instance, with {@link #excludedFields} already ignored.
+     * Creates a population API for the specified instance, with the simple paths of {@link #excludedPaths} already
+     * ignored.
      *
      * @param instance the instance to be populated.
      * @return a population API for the {@code instance}.
@@ -99,13 +104,18 @@ public abstract class InstancioObjectRandomizer<T>
      *         {@link org.instancio.LenientSelector#lenient() lenient}, since a name which matches nothing is a
      *         legitimate exclusion here — a subclass commonly passes a superset of names — while Instancio, in strict
      *         mode, would fail on an unused selector.
+     *         <p>
+     *         Nested paths are not expressed here. Instancio scopes a selector
+     *         {@link org.instancio.ScopeableSelector#within(org.instancio.Scope...) within} enclosing slots, but not
+     *         <em>directly</em> within them, so {@code "a.b"} would also match an {@code a.x.b}; {@link #get()} resets
+     *         them, exactly, once Instancio is done.
      * @see Instancio#ofObject(Object)
      * @see #getInstancioSettings()
      */
     protected InstancioObjectApi<T> getInstancio(final T instance) {
         return Instancio.ofObject(instance)
                 .withSettings(getInstancioSettings())
-                .ignore(Select.fields(f -> excludedFields.contains(f.getName())
+                .ignore(Select.fields(f -> excludedPaths.contains(f.getName())
                                            && f.getDeclaringClass().isAssignableFrom(instance.getClass()))
                                 .lenient());
     }
@@ -115,13 +125,14 @@ public abstract class InstancioObjectRandomizer<T>
      *
      * @return {@inheritDoc}
      * @implSpec Fills the instance from {@link #newTargetInstance()}, through the
-     *         {@link #getInstancio(Object) instancio} API, and returns that very instance.
+     *         {@link #getInstancio(Object) instancio} API, {@link #resetNestedExcludedPaths(Object) resets} the slots
+     *         which nested excluded paths name, and returns that very instance.
      * @see InstancioObjectApi#fill()
      */
     @Override
     public T get() {
         final T instance = newTargetInstance();
         getInstancio(instance).fill();
-        return instance;
+        return resetNestedExcludedPaths(instance);
     }
 }

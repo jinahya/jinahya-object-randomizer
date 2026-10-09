@@ -1,6 +1,7 @@
 package com.github.jinahya.object.randomizer;
 
-import org.jspecify.annotations.Nullable;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import uk.co.jemos.podam.api.AbstractClassInfoStrategy;
 import uk.co.jemos.podam.api.ClassInfo;
 import uk.co.jemos.podam.api.ClassInfoStrategy;
@@ -53,16 +54,19 @@ public abstract class PodamObjectRandomizer<T>
      * Creates a new instance for initializing a randomized instance of the specified class.
      *
      * @param targetClass    the class to be randomized.
-     * @param excludedFields fields to be excluded from randomization; {@code null}, and blank, elements are dropped,
-     *                       and the rest are stripped and deduplicated.
-     * @throws NullPointerException when either argument is {@code null}.
+     * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of
+     *                      {@code .} and white space, and rejoined with {@code .}, so that {@code " a . b "},
+     *                      {@code "a..b"}, and {@code "a b"} are all {@code "a.b"}; duplicates are dropped.
+     * @throws NullPointerException     when either argument is {@code null}, or when an element is {@code null}.
+     * @throws IllegalArgumentException when an element is left with no segment, as {@code ""}, {@code "  "}, and
+     *                                  {@code "."} are.
      * @apiNote A subclass is expected to declare a no-argument constructor which supplies both arguments, for
      *         that is how a located randomizer class is instantiated.
      * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
-    public PodamObjectRandomizer(final Class<T> targetClass,
-                                 final Iterable<? extends @Nullable String> excludedFields) {
-        super(targetClass, excludedFields);
+    public PodamObjectRandomizer(final @NotNull Class<T> targetClass,
+                                 final @NotNull Iterable<@NotBlank String> excludedPaths) {
+        super(targetClass, excludedPaths);
     }
 
 //SEP8//
@@ -78,10 +82,10 @@ public abstract class PodamObjectRandomizer<T>
     }
 
     /**
-     * Creates a new class info strategy which excludes {@link #excludedFields} from the {@link #targetClass}, and from
-     * any subclass of it.
+     * Creates a new class info strategy which excludes the simple paths of {@link #excludedPaths} from the
+     * {@link #targetClass}, and from any subclass of it.
      *
-     * @return a new class info strategy which excludes {@link #excludedFields}
+     * @return a new class info strategy which excludes the simple paths of {@link #excludedPaths}
      * @implNote A new instance, rather than
      *         {@link uk.co.jemos.podam.api.DefaultClassInfoStrategy#getInstance()}, whose excluded fields, being held
      *         by a singleton and never removed, would leak into every other randomizer of a same target class.
@@ -93,6 +97,9 @@ public abstract class PodamObjectRandomizer<T>
      *         {@link #newTargetInstance()} yields a subclass — which an override of that method is explicitly allowed
      *         to do. Registrations made by a subclass, through {@code addExcludedField}, are merged in, so that
      *         customization keeps working.
+     *         <p>
+     *         A {@link ClassInfo} describes a class, not a place in the object graph, so nested paths can not be
+     *         expressed here at all; {@link #get()} resets them once PODAM is done.
      */
     protected ClassInfoStrategy getClassInfoStrategy() {
         return new AbstractClassInfoStrategy() {
@@ -105,7 +112,8 @@ public abstract class PodamObjectRandomizer<T>
                     excluded.addAll(registered);
                 }
                 if (targetClass.isAssignableFrom(pojoClass)) {
-                    excluded.addAll(excludedFields);
+                    // PODAM takes these as field names; a nested path is no name of a field, so it is not handed over
+                    excludedPaths.stream().filter(v -> !_Paths.isNested(v)).forEach(excluded::add);
                 }
                 // getExtraMethods(Class) is a raw map lookup, and may be null; the ClassInfo constructor adds the
                 // argument to a collection without a null check
@@ -142,11 +150,12 @@ public abstract class PodamObjectRandomizer<T>
      *
      * @return {@inheritDoc}
      * @implSpec Populates a {@link #newTargetInstance() new instance} of the {@link #targetClass}, using a
-     *         factory from the {@link #getPodamFactory() podamFactory} method.
+     *         factory from the {@link #getPodamFactory() podamFactory} method, and then
+     *         {@link #resetNestedExcludedPaths(Object) resets} the slots which nested excluded paths name.
      * @see PodamFactory#populatePojo(Object, java.lang.reflect.Type...)
      */
     @Override
     public T get() {
-        return getPodamFactory().populatePojo(newTargetInstance());
+        return resetNestedExcludedPaths(getPodamFactory().populatePojo(newTargetInstance()));
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests that {@link AbstractObjectRandomizer#excludedFields} are honored by every flavor, for the shapes a JPA entity
+ * Tests that {@link AbstractObjectRandomizer#excludedPaths} are honored by every flavor, for the shapes a JPA entity
  * actually takes: a field inherited from a mapped superclass, and an instance whose runtime class is a subclass of the
  * {@link AbstractObjectRandomizer#targetClass targetClass}.
  *
@@ -90,7 +90,7 @@ class AbstractObjectRandomizer_Exclusion_Test {
             }
         }
 
-        @DisplayName("an inherited field named in excludedFields is not randomized")
+        @DisplayName("an inherited field named in excludedPaths is not randomized")
         @Test
         void excluded_Inherited() {
             final var instance = new DerivedRandomizer().get();
@@ -135,7 +135,7 @@ class AbstractObjectRandomizer_Exclusion_Test {
             }
         }
 
-        @DisplayName("an inherited field named in excludedFields is not randomized")
+        @DisplayName("an inherited field named in excludedPaths is not randomized")
         @Test
         void excluded_Inherited() {
             final var instance = new DerivedRandomizer().get();
@@ -156,7 +156,7 @@ class AbstractObjectRandomizer_Exclusion_Test {
             }
         }
 
-        @DisplayName("an inherited field named in excludedFields is not randomized")
+        @DisplayName("an inherited field named in excludedPaths is not randomized")
         @Test
         void excluded_Inherited() {
             final var instance = new DerivedRandomizer().get();
@@ -201,7 +201,7 @@ class AbstractObjectRandomizer_Exclusion_Test {
             }
         }
 
-        @DisplayName("an inherited field named in excludedFields is not randomized")
+        @DisplayName("an inherited field named in excludedPaths is not randomized")
         @Test
         void excluded_Inherited() {
             final var instance = new DerivedRandomizer().get();

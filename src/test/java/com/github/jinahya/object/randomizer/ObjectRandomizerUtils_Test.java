@@ -20,7 +20,7 @@ class ObjectRandomizerUtils_Test {
     }
 
     /**
-     * A randomizer whose exclusions are merged, and, hence, carry blank, duplicate, and {@code null} elements.
+     * A randomizer whose exclusions are merged, and, hence, carry duplicate elements.
      */
     static class BeanRandomizer
             extends AbstractObjectRandomizer<Bean> {
@@ -28,9 +28,9 @@ class ObjectRandomizerUtils_Test {
         BeanRandomizer() {
             super(
                     Bean.class,
-                    ObjectRandomizerUtils.moreExcludedFields(
-                            List.of(" a ", "  "),
-                            Arrays.asList("a", null, "b")
+                    ObjectRandomizerUtils.moreExcludedPaths(
+                            List.of(" a "),
+                            List.of("a", "b")
                     )
             );
         }
@@ -40,8 +40,8 @@ class ObjectRandomizerUtils_Test {
             return new Bean();
         }
 
-        Set<String> excludedFields() {
-            return excludedFields;
+        Set<String> excludedPaths() {
+            return excludedPaths;
         }
     }
 
@@ -156,32 +156,41 @@ class ObjectRandomizerUtils_Test {
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    @DisplayName("moreExcludedFields(a, b) -> a, then b, as they are")
+    @DisplayName("moreExcludedPaths(a, b) -> a, then b, as they are")
     @Test
-    void moreExcludedFields_Concatenated_() {
-        assertThat(ObjectRandomizerUtils.moreExcludedFields(List.of("a", "b"), List.of("b", "c")))
+    void moreExcludedPaths_Concatenated_() {
+        assertThat(ObjectRandomizerUtils.moreExcludedPaths(List.of("a", "b"), List.of("b", "c")))
                 .containsExactly("a", "b", "b", "c");
     }
 
-    @DisplayName("moreExcludedFields(empty, empty) -> empty")
+    @DisplayName("moreExcludedPaths(empty, empty) -> empty")
     @Test
-    void moreExcludedFields_Empty_Empty() {
-        assertThat(ObjectRandomizerUtils.moreExcludedFields(List.of(), List.of())).isEmpty();
+    void moreExcludedPaths_Empty_Empty() {
+        assertThat(ObjectRandomizerUtils.moreExcludedPaths(List.of(), List.of())).isEmpty();
     }
 
-    @DisplayName("moreExcludedFields(null, _) / moreExcludedFields(_, null) -> NullPointerException")
+    @DisplayName("moreExcludedPaths(null, _) / moreExcludedPaths(_, null) -> NullPointerException")
     @Test
-    void moreExcludedFields_NullPointerException_Null() {
-        assertThatThrownBy(() -> ObjectRandomizerUtils.moreExcludedFields(null, List.of()))
+    void moreExcludedPaths_NullPointerException_Null() {
+        assertThatThrownBy(() -> ObjectRandomizerUtils.moreExcludedPaths(null, List.of()))
                 .isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> ObjectRandomizerUtils.moreExcludedFields(List.of(), null))
+        assertThatThrownBy(() -> ObjectRandomizerUtils.moreExcludedPaths(List.of(), null))
                 .isInstanceOf(NullPointerException.class);
     }
 
-    @DisplayName("the randomizer constructor strips, drops blank/null, and deduplicates the merged exclusions")
+    @DisplayName("moreExcludedPaths(_, [null]) / moreExcludedPaths([null], _) -> NullPointerException")
     @Test
-    void excludedFields_StrippedDedupedWithoutBlanks_Merged() {
-        assertThat(new BeanRandomizer().excludedFields()).containsExactlyInAnyOrder("a", "b");
+    void moreExcludedPaths_NullPointerException_NullElement() {
+        assertThatThrownBy(() -> ObjectRandomizerUtils.moreExcludedPaths(List.of(), Arrays.asList("a", null)))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> ObjectRandomizerUtils.moreExcludedPaths(Arrays.asList(null, "a"), List.of()))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @DisplayName("the randomizer constructor strips, and deduplicates, the merged exclusions")
+    @Test
+    void excludedPaths_StrippedDeduped_Merged() {
+        assertThat(new BeanRandomizer().excludedPaths()).containsExactlyInAnyOrder("a", "b");
     }
 
     @DisplayName("newRandomizerInstanceOf(Bean.class) -> present, the sibling BeanRandomizer")

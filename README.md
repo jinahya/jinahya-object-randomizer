@@ -48,7 +48,7 @@ randomizer under `src/test`.
 
 `ObjectRandomizer<T>` is the role — a `Supplier<T>` of randomized instances, and what the
 convention locates. `AbstractObjectRandomizer<T>` implements it, holding the target class and the
-excluded fields, and the three flavors extend that, one per engine.
+excluded paths, and the three flavors extend that, one per engine.
 
 ## The three flavors
 
@@ -72,6 +72,38 @@ with an associated type is excluded on *both* types under Instancio, on the targ
 under PODAM, and on the target type only under Fixture Monkey. Read the class Javadoc before
 treating the three as interchangeable.
 
+## Excluded paths
+
+The second constructor argument is a list of *paths*: names of the slots the engine is asked to
+leave alone. An exclusion is a hint — each engine discovers slots its own way, and honors a path as
+far as it can.
+
+- A **simple** path, such as `"id"`, goes to the engine's own exclusion mechanism, and is scoped as
+  the table above says.
+- A **nested** path, such as `"address.address1"`, is anchored at the target: the first segment
+  names a slot of the target, each next one a slot of what the previous reached. A segment which
+  reaches a collection, an array, an `Optional` or a map's values reaches every element, so
+  `"addresses.address1"` names the `address1` of every element of `addresses`.
+
+```java
+super(User.class, List.of("id", "address.address1"));
+```
+
+A path under another one — `"address.postalCode"` beside `"address"` — is dropped, for the slot it
+names is never randomized anyway, and no engine should be handed a rule for a slot it was already
+told to leave alone.
+
+A nested slot is left at what a freshly constructed owner carries — the engine created that owner,
+so there is no earlier value to keep. None of the three engines can exclude by a nested path
+exactly, so every flavor resets nested slots once its engine is done, through
+`resetNestedExcludedPaths(T)`; an override of `get()` can call it too. A path which names nothing is
+not an error. A path is split on runs of `.` and white space and rejoined with `.`, so
+`" a . b "`, `"a..b"` and `"a b"` are all `"a.b"`, and `"a."` is `"a"` — no engine is ever handed a
+name with white space in it. Segments are not verified otherwise, for what names a slot is the
+engine's to say. Only a `null` path, rejected with a
+`NullPointerException`, and one left with no segment — `""`, `"  "`, `"."` — rejected with an
+`IllegalArgumentException`, fail.
+
 ## Bean validation
 
 All three flavors honor `jakarta.validation.constraints` **without being configured to**. Nothing
@@ -94,9 +126,11 @@ Each of the three exposes the decision as an override, should you want the oppos
 that an override which does not build on `super`'s return value gives up the field exclusions along
 with the constraint support.
 
-Nothing in `src/main` references the API, so it is **test scope only**: an engine reads a target
-class's constraints reflectively, and a consumer that annotates its own classes already has the API
-on its classpath. PODAM's support is partial — a lone `@Max` is ignored, `@Pattern` yields `null`,
+The API is a **`provided`** dependency. An engine reads a target class's constraints reflectively,
+and a consumer that annotates its own classes already has the API on its classpath; `src/main` uses
+it only to annotate its own parameters — `@NotNull`, and `@NotBlank` on each excluded path — which
+document a contract the code checks by hand. A consumer of Java SE alone needs nothing: javac and
+reflection both skip an annotation whose class is absent. PODAM's support is partial — a lone `@Max` is ignored, `@Pattern` yields `null`,
 and two constraints on one field are honored one at a time, so a field carrying both `@Size` and
 `@Email` gets a string of the right length and no address — so read `PodamObjectRandomizer`'s
 Javadoc before trusting a randomized instance to be a valid one.

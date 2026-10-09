@@ -178,11 +178,14 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- the constraints an engine reads off a target class -->
+    <!-- main annotates its own parameters with constraints, which document a contract that the code checks by hand,
+         so the API is provided rather than compile: an annotation whose class is absent is skipped, by javac and by
+         reflection alike, and a consumer of Java SE alone needs nothing. Tests compile against it all the same, for
+         the constraints an engine reads off a target class. Its version is the active jakarta-ee-NN profile's -->
     <dependency>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
-      <scope>test</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>

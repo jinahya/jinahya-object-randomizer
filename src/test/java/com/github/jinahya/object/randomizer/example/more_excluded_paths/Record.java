@@ -1,4 +1,4 @@
-package com.github.jinahya.object.randomizer.example.more_excluded_fields;
+package com.github.jinahya.object.randomizer.example.more_excluded_paths;
 
 /**
  * A target with two fields a randomizer might leave alone and one it should always fill.

@@ -11,7 +11,7 @@
  *   <dd>The role itself; a {@link java.util.function.Supplier} of randomized instances, and what the convention
  *       locates.</dd>
  *   <dt>{@link com.github.jinahya.object.randomizer.AbstractObjectRandomizer}</dt>
- *   <dd>A skeletal implementation which holds the target class and the excluded fields, and which every flavor
+ *   <dd>A skeletal implementation which holds the target class and the excluded paths, and which every flavor
  *       below extends. It references no engine at all.</dd>
  *   <dt>{@link com.github.jinahya.object.randomizer.PodamObjectRandomizer},
  *       {@link com.github.jinahya.object.randomizer.InstancioObjectRandomizer},
@@ -20,7 +20,9 @@
  * </dl>
  *
  * <h2>Construction</h2>
- * A randomizer fills an instance with random values, excluding the fields it is told to leave alone. How the instance
+ * A randomizer fills an instance with random values, excluding the slots it is told to leave alone &mdash; by a
+ * path, such as {@code "id"} or {@code "address.address1"}; see
+ * {@link com.github.jinahya.object.randomizer.AbstractObjectRandomizer} for how a path is read. How the instance
  * it fills comes to be depends on the flavor:
  * {@link com.github.jinahya.object.randomizer.PodamObjectRandomizer} and
  * {@link com.github.jinahya.object.randomizer.InstancioObjectRandomizer} take it from

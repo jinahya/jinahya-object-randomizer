@@ -1,10 +1,15 @@
 package com.github.jinahya.object.randomizer;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import org.jeasy.random.DefaultExclusionPolicy;
 import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
 import org.jeasy.random.FieldPredicates;
-import org.jspecify.annotations.Nullable;
+import org.jeasy.random.api.ExclusionPolicy;
+import org.jeasy.random.api.RandomizerContext;
 
+import java.lang.reflect.Field;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -49,16 +54,19 @@ abstract class EasyRandomObjectRandomizer<T>
      * Creates a new instance for initializing a randomized instance of the specified class.
      *
      * @param targetClass    the class to be randomized.
-     * @param excludedFields fields to be excluded from randomization; {@code null}, and blank, elements are dropped,
-     *                       and the rest are stripped and deduplicated.
-     * @throws NullPointerException when either argument is {@code null}.
+     * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of
+     *                      {@code .} and white space, and rejoined with {@code .}, so that {@code " a . b "},
+     *                      {@code "a..b"}, and {@code "a b"} are all {@code "a.b"}; duplicates are dropped.
+     * @throws NullPointerException     when either argument is {@code null}, or when an element is {@code null}.
+     * @throws IllegalArgumentException when an element is left with no segment, as {@code ""}, {@code "  "}, and
+     *                                  {@code "."} are.
      * @apiNote A subclass is expected to declare a no-argument constructor which supplies both arguments, for
      *         that is how a located randomizer class is instantiated.
      * @see AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable)
      */
-    EasyRandomObjectRandomizer(final Class<T> targetClass,
-                               final Iterable<? extends @Nullable String> excludedFields) {
-        super(targetClass, excludedFields);
+    EasyRandomObjectRandomizer(final @NotNull Class<T> targetClass,
+                               final @NotNull Iterable<@NotBlank String> excludedPaths) {
+        super(targetClass, excludedPaths);
     }
 
 //SEP8//
@@ -80,10 +88,10 @@ abstract class EasyRandomObjectRandomizer<T>
     }
 
     /**
-     * Creates new parameters which exclude {@link #excludedFields} declared on the {@link #targetClass}, or on any of
-     * its supertypes.
+     * Creates new parameters which exclude the simple paths of {@link #excludedPaths} declared on the
+     * {@link #targetClass}, or on any of its supertypes, and the nested ones where they lead.
      *
-     * @return new parameters which exclude {@link #excludedFields}.
+     * @return new parameters which exclude {@link #excludedPaths}.
      * @implNote Each exclusion is narrowed to the fields which the {@link #targetClass} actually declares or
      *         inherits, so that a field of a same name, declared on an unrelated type reached through an association,
      *         is still randomized. Note that the predicate identifies a field <em>declaration</em>, and that Easy
@@ -99,14 +107,36 @@ abstract class EasyRandomObjectRandomizer<T>
      *         {@link String#equals(Object) equality}, rather than by
      *         {@link FieldPredicates#named(String) FieldPredicates.named}, which treats its argument as a regular
      *         expression, so that both flavors read an exclusion the same way.
+     *         <p>
+     *         Nested paths are excluded natively, by an {@link ExclusionPolicy} which matches the path Easy Random
+     *         has descended, {@link RandomizerContext#getCurrentField()}, followed by the field at hand. That path
+     *         descends into the elements of a collection, an array, and a map, so {@code "addresses.address1"} is
+     *         excluded on every element, as the other flavors reset it; a bean <em>key</em> of a map is excluded
+     *         too, which the others leave alone. The policy alone is not enough, though, for Easy Random
+     *         <em>shares</em> beans: once it has populated
+     *         {@link EasyRandomParameters#getObjectPoolSize() objectPoolSize} beans of a type, it hands out one of those
+     *         again, populated wherever it was first reached, so {@link #get()} resets the nested paths as well.
      * @see EasyRandomParameters#excludeField(java.util.function.Predicate)
+     * @see EasyRandomParameters#exclusionPolicy(ExclusionPolicy)
      * @see #getSeed()
      */
     protected EasyRandomParameters getEasyRandomParameters() {
         final var parameters = new EasyRandomParameters().seed(getSeed());
-        excludedFields.forEach(v -> parameters.excludeField(
-                f -> f.getName().equals(v) && f.getDeclaringClass().isAssignableFrom(targetClass)
-        ));
+        parameters.excludeField(
+                f -> excludedPaths.contains(f.getName()) && f.getDeclaringClass().isAssignableFrom(targetClass)
+        );
+        parameters.exclusionPolicy(new DefaultExclusionPolicy() {
+            @Override
+            public boolean shouldBeExcluded(final Field field, final RandomizerContext context) {
+                if (super.shouldBeExcluded(field, context)) {
+                    return true;
+                }
+                // the path of the parent, which is empty at the root, where a simple path has been handled above
+                final var parent = context.getCurrentField();
+                return !parent.isEmpty()
+                       && excludedPaths.contains(parent + _Constants.EXCLUDED_PATH_SEPARATOR + field.getName());
+            }
+        });
         return parameters;
     }
 
@@ -127,7 +157,11 @@ abstract class EasyRandomObjectRandomizer<T>
      *
      * @return {@inheritDoc}
      * @implSpec Returns a new object of the {@link #targetClass}, from a randomizer of the
-     *         {@link #getEasyRandom() easyRandom} method.
+     *         {@link #getEasyRandom() easyRandom} method, with the slots which nested excluded paths name
+     *         {@link #resetNestedExcludedPaths(Object) reset}. The parameters exclude those slots already, but a bean
+     *         which Easy Random shares between two slots is populated where it is first reached; the reset makes the
+     *         exclusion hold wherever else it is reached. A bean so shared with a slot which no path excludes has its
+     *         excluded slot reset there too, for it is one and the same object.
      * @implNote Unlike {@link PodamObjectRandomizer} and {@link InstancioObjectRandomizer}, this class does not
      *         use the {@link #newTargetInstance()} method; Easy Random instantiates the {@link #targetClass} itself,
      *         through the {@link org.jeasy.random.ObjenesisObjectFactory} which
@@ -141,6 +175,6 @@ abstract class EasyRandomObjectRandomizer<T>
      */
     @Override
     public T get() {
-        return getEasyRandom().nextObject(targetClass);
+        return resetNestedExcludedPaths(getEasyRandom().nextObject(targetClass));
     }
 }

@@ -1,4 +1,4 @@
-package com.github.jinahya.object.randomizer.example.excluded_fields;
+package com.github.jinahya.object.randomizer.example.excluded_paths;
 
 /**
  * A target whose {@code id} stands for a value the persistence provider assigns, and which a randomizer must therefore
