@@ -23,9 +23,9 @@ import java.util.stream.StreamSupport;
  * whatever the engine discovers as slots, and honored as far as the engine allows. Each flavor documents what it
  * matches a path against, and what it can not exclude.
  * <p>
- * The word <em>path</em> is chosen ahead of what every engine can do. A single name, such as {@code "address"}, is
- * what every flavor honors, by handing it to its engine. A dotted path, such as {@code "address.address1"}, is a
- * best-effort extension: each flavor declared here honors it, natively or by a reset of its own, within the limits its
+ * The word <em>path</em> is chosen ahead of what every engine can do. A single name, such as {@code "address"}, is what
+ * every flavor honors, by handing it to its engine. A dotted path, such as {@code "address.address1"}, is a best-effort
+ * extension: each flavor declared here honors it, natively or by a reset of its own, within the limits its
  * documentation states, but a flavor of another engine, or one written by hand, need not.
  * <ul>
  *   <li>A <em>simple</em> path, of a single segment such as {@code "id"}, is handed to the engine's own exclusion
