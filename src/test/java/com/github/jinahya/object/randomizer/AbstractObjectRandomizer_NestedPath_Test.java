@@ -37,6 +37,26 @@ class AbstractObjectRandomizer_NestedPath_Test {
      */
     static final int NUMBER = 7;
 
+    /**
+     * An enum whose constants carry state, which no reset may touch, for a constant is shared by the whole program.
+     */
+    public enum Status {
+
+        ACTIVE("active"),
+
+        INACTIVE("inactive");
+
+        Status(final String label) {
+            this.label = label;
+        }
+
+        private final String label;
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
     public static class Geo {
 
         private String lat;
@@ -141,6 +161,16 @@ class AbstractObjectRandomizer_NestedPath_Test {
         private Address[] addressArray;
 
         private Map<String, Address> addressMap;
+
+        private Status status;
+
+        public Status getStatus() {
+            return status;
+        }
+
+        public void setStatus(final Status status) {
+            this.status = status;
+        }
 
         public Address[] getAddressArray() {
             return addressArray;
@@ -320,6 +350,101 @@ class AbstractObjectRandomizer_NestedPath_Test {
         for (final var user : draw(flavor, List.of("address.nothing", "nothing.address1", "address1.length"))) {
             assertThat(user.getAddress().getAddress1()).isNotNull();
             assertThat(user.getAddress1()).isNotNull();
+        }
+    }
+
+    @DisplayName("a nested path through an enum constant leaves every constant as it is")
+    @MethodSource("flavors")
+    @ParameterizedTest(name = "[{index}] {0}")
+    void nested_ThroughAnEnumConstant(final String name,
+                                      final Function<List<String>, ObjectRandomizer<User>> flavor) {
+        for (final var user : draw(flavor, List.of("status.label"))) {
+            assertThat(user.getStatus()).as("the enum slot itself is randomized").isNotNull();
+        }
+        assertThat(Status.ACTIVE.getLabel()).isEqualTo("active");
+        assertThat(Status.INACTIVE.getLabel()).isEqualTo("inactive");
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * A subclass of {@link User}, which {@link AbstractObjectRandomizer#newTargetInstance()} may return.
+     */
+    public static class UserSub
+            extends User {
+
+        private Address secondary;
+
+        public Address getSecondary() {
+            return secondary;
+        }
+
+        public void setSecondary(final Address secondary) {
+            this.secondary = secondary;
+        }
+    }
+
+    static Stream<Arguments> instantiatingFlavors() {
+        return Stream.of(
+                Arguments.of("PODAM", (Function<List<String>, ObjectRandomizer<User>>)
+                        v -> new PodamObjectRandomizer<>(User.class, v) {
+                            @Override
+                            protected User newTargetInstance() {
+                                return new UserSub();
+                            }
+                        }),
+                Arguments.of("Instancio", (Function<List<String>, ObjectRandomizer<User>>)
+                        v -> new InstancioObjectRandomizer<>(User.class, v) {
+                            @Override
+                            protected User newTargetInstance() {
+                                return new UserSub();
+                            }
+                        })
+        );
+    }
+
+    @DisplayName("a nested path reaches a slot which only the subclass newTargetInstance() returns declares")
+    @MethodSource("instantiatingFlavors")
+    @ParameterizedTest(name = "[{index}] {0}")
+    void nested_OnASubclassInstance(final String name,
+                                    final Function<List<String>, ObjectRandomizer<User>> flavor) {
+        for (final var user : draw(flavor, List.of("secondary.address1", "address.address1"))) {
+            assertThat(user).isInstanceOf(UserSub.class);
+            final var secondary = ((UserSub) user).getSecondary();
+            assertThat(secondary).as("the subclass's own association").isNotNull();
+            assertThat(secondary.getAddress1()).as("the excluded slot under it").isNull();
+            assertThat(secondary.getAddress2()).as("a sibling of the excluded slot").isNotNull();
+            assertThat(user.getAddress().getAddress1()).as("the excluded slot under an inherited one").isNull();
+        }
+    }
+
+    @DisplayName("Fixture Monkey: a slot set through the builder, and named by a nested path, is excluded all the same")
+    @Test
+    void nested_WinsOverTheBuilder_OfFixtureMonkey() {
+        final var randomizer = new FixtureMonkeyObjectRandomizer<User>(User.class, List.of("address.address1")) {
+            @Override
+            protected com.navercorp.fixturemonkey.ArbitraryBuilder<User> getArbitraryBuilder() {
+                return super.getArbitraryBuilder().set("address.address1", "set").set("address.address2", "set");
+            }
+        };
+        for (int i = 0; i < DRAWS; i++) {
+            final var user = randomizer.get();
+            assertThat(user.getAddress().getAddress1()).as("set, and excluded").isNull();
+            assertThat(user.getAddress().getAddress2()).as("set only").isEqualTo("set");
+        }
+    }
+
+    @DisplayName("Easy Random: a nested path is excluded even when an override replaces the exclusion policy")
+    @Test
+    void nested_SurvivesAReplacedPolicy_OfEasyRandom() {
+        final var randomizer = new EasyRandomObjectRandomizer<User>(User.class, List.of("address.address1")) {
+            @Override
+            protected org.jeasy.random.EasyRandomParameters getEasyRandomParameters() {
+                return super.getEasyRandomParameters().exclusionPolicy(new org.jeasy.random.DefaultExclusionPolicy());
+            }
+        };
+        for (int i = 0; i < DRAWS; i++) {
+            assertThat(randomizer.get().getAddress().getAddress1()).isNull();
         }
     }
 

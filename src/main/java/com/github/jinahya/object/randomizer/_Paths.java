@@ -2,7 +2,6 @@ package com.github.jinahya.object.randomizer;
 
 import org.jspecify.annotations.Nullable;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -39,15 +38,15 @@ final class _Paths {
 
     /**
      * Normalizes the specified path: splits it on {@link _Constants#EXCLUDED_PATH_SEPARATOR_PATTERN}, and joins its
-     * segments with {@value _Constants#EXCLUDED_PATH_SEPARATOR}; {@code " a . b "}, {@code "a..b"}, and
-     * {@code "a b"} all normalize to {@code "a.b"}, and {@code "a."} to {@code "a"}.
+     * segments with {@value _Constants#EXCLUDED_PATH_SEPARATOR}; {@code " a . b "}, {@code "a..b"}, and {@code "a b"}
+     * all normalize to {@code "a.b"}, and {@code "a."} to {@code "a"}.
      *
      * @param path the path to normalize.
      * @return the normalized path, which carries no white space, and no separator but between two segments.
      * @throws IllegalArgumentException when the {@code path} has no segment, as {@code ""}, {@code "  "}, and
      *                                  {@code "."} do.
-     * @apiNote Segments are not verified otherwise: what names a slot is the engine's to say, and a segment which
-     *         names nothing is harmless.
+     * @apiNote Segments are not verified otherwise: what names a slot is the engine's to say, and a segment
+     *         which names nothing is harmless.
      */
     static String normalize(final String path) {
         assert path != null;
@@ -106,21 +105,25 @@ final class _Paths {
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * Resets, on every object the specified segments reach from the specified root, the slot the last segment names,
-     * to the value which a freshly constructed object of the same class carries in it.
+     * Resets, on every object the specified segments reach from the specified root, the slot the last segment names, to
+     * the value which a freshly constructed object of the same class carries in it.
      *
      * @param root     the object the {@code segments} start from.
      * @param segments the segments of the path; at least one.
-     * @implNote A fresh owner is constructed, through its no-argument constructor, for each slot reset, so that a
-     *         mutable value which that constructor assigns, an empty collection say, is never shared between two
-     *         owners. An owner whose class declares no usable no-argument constructor has the slot reset to the
-     *         default value of its type instead. Nothing here fails: a segment which names no field, and a field which
-     *         can be neither read nor written, are each logged and passed over, for an exclusion is a hint.
+     * @implNote A fresh owner is constructed, through its no-argument constructor, for each slot reset, so that
+     *         a mutable value which that constructor assigns, an empty collection say, is never shared between two
+     *         owners. Nothing is ever written which is not taken from such a fresh owner: an owner whose class declares
+     *         no usable no-argument constructor keeps the slot as it is, for a value made up in its place could be
+     *         written into an object which other parts of the program share. For the same reason, an enum constant is
+     *         never walked into, nor written on; it is one object for the whole of the program. Nothing here fails: a
+     *         segment which names no field, a field which can be neither read nor written, and an owner which can not
+     *         be constructed afresh, are each logged and passed over, for an exclusion is a hint.
      */
     static void reset(final Object root, final List<String> segments) {
         assert root != null;
         assert !segments.isEmpty();
-        List<Object> owners = List.of(root);
+        List<Object> owners = new ArrayList<>();
+        flatten(root, owners);
         for (final var segment : segments.subList(0, segments.size() - 1)) {
             final var next = new ArrayList<>();
             for (final var owner : owners) {
@@ -135,11 +138,20 @@ final class _Paths {
         final var last = segments.get(segments.size() - 1);
         for (final var owner : owners) {
             final var field = field(owner.getClass(), last);
-            if (field != null) {
-                write(field, owner, fresh(field, owner.getClass()));
+            if (field == null) {
+                continue;
+            }
+            final var fresh = fresh(field, owner.getClass());
+            if (fresh != NONE) {
+                write(field, owner, fresh);
             }
         }
     }
+
+    /**
+     * A sentinel for a value which can not be had; distinct from {@code null}, which is a value.
+     */
+    private static final Object NONE = new Object();
 
     /**
      * Finds the instance field of the specified name, on the specified class or on the nearest of its superclasses.
@@ -190,17 +202,25 @@ final class _Paths {
 
     /**
      * Returns the value which a freshly constructed instance of the specified class carries in the specified field.
+     *
+     * @return the value, which may be {@code null}; {@link #NONE} when no such instance can be constructed, or when the
+     *         value can not be read off one.
      */
     private static @Nullable Object fresh(final Field field, final Class<?> ownerClass) {
         final Object owner;
         try {
             owner = _Utils.newInstance(ownerClass);
         } catch (final RuntimeException re) {
-            logger.log(System.Logger.Level.DEBUG,
-                       () -> "can not construct " + ownerClass + "; resetting " + field + " to its default", re);
-            return field.getType().isPrimitive() ? Array.get(Array.newInstance(field.getType(), 1), 0) : null;
+            logger.log(System.Logger.Level.WARNING,
+                       () -> "can not construct " + ownerClass + " afresh; leaving " + field + " as it is", re);
+            return NONE;
         }
-        return read(field, owner);
+        try {
+            return field.get(owner);
+        } catch (final IllegalAccessException iae) {
+            logger.log(System.Logger.Level.WARNING, "failed to read " + field + "; leaving it as it is", iae);
+            return NONE;
+        }
     }
 
     /**
@@ -210,7 +230,10 @@ final class _Paths {
         if (value == null) {
             return;
         }
-        if (value instanceof Iterable<?> iterable) {
+        if (value instanceof Enum<?>) {
+            // a constant is shared by the whole of the program; nothing on it is ours to reset
+            logger.log(System.Logger.Level.DEBUG, "not walking into an enum constant, {0}; passing over", value);
+        } else if (value instanceof Iterable<?> iterable) {
             iterable.forEach(e -> flatten(e, sink));
         } else if (value instanceof Map<?, ?> map) {
             // values only; a key is never reset, for that would corrupt the map it is a key of

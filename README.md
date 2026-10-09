@@ -94,7 +94,9 @@ names is never randomized anyway, and no engine should be handed a rule for a sl
 told to leave alone.
 
 A nested slot is left at what a freshly constructed owner carries — the engine created that owner,
-so there is no earlier value to keep. None of the three engines can exclude by a nested path
+so there is no earlier value to keep. Nothing else is ever written: an owner which can not be
+constructed afresh, through a no-argument constructor, keeps the slot as it is, and an enum constant,
+shared by the whole program, is never walked into. None of the three engines can exclude by a nested path
 exactly, so every flavor resets nested slots once its engine is done, through
 `resetNestedExcludedPaths(T)`; an override of `get()` can call it too. A path which names nothing is
 not an error. A path is split on runs of `.` and white space and rejoined with `.`, so

@@ -116,9 +116,11 @@ public abstract class AbstractObjectRandomizer<T>
      *         not touched, for they are the engine's to honor.
      * @implNote Slots are found, and reset, by reflection, on the declared fields of the runtime class of each
      *         owner and of its superclasses. A fresh owner is constructed through its no-argument constructor, one per
-     *         reset slot, so that a mutable value that constructor assigns is never shared; an owner whose class has no
-     *         usable one has the slot reset to the default value of its type. A slot which can be neither read nor
-     *         written, such as a component of a record, is logged and left as it is. A key of a map is never reset.
+     *         reset slot, so that a mutable value that constructor assigns is never shared. Nothing is written which is
+     *         not taken from such a fresh owner: an owner whose class has no usable one keeps the slot as it is, as
+     *         does a slot which can be neither read nor written, such as a component of a record, each logged. An enum
+     *         constant, being shared by the whole of the program, is never walked into, and a key of a map is never
+     *         reset.
      */
     protected T resetNestedExcludedPaths(final T instance) {
         Objects.requireNonNull(instance, "instance is null");
@@ -138,14 +140,14 @@ public abstract class AbstractObjectRandomizer<T>
     /**
      * An unmodifiable set of paths of the slots to exclude from the randomization, each normalized to its segments,
      * none of which carries white space, joined by {@code .}.
+     * <p>
+     * A path under another one, such as {@code "address.postalCode"} under {@code "address"}, is not in this set, for
+     * the slot it names is never randomized anyway; no engine is handed a rule for a slot it was already told to leave
+     * alone.
      *
-     * A path under another one, such as {@code "address.postalCode"} under {@code "address"}, is not in this set,
-     * for the slot it names is never randomized anyway; no engine is handed a rule for a slot it was already told to
-     * leave alone.
-     *
-     * @apiNote No name of a slot carries a {@code .}, so a name looked up in this set can only ever match a simple
-     *         path. A flavor matches a name against this set in a predicate of its own; one which hands names to its
-     *         engine as data hands the simple paths only.
+     * @apiNote No name of a slot carries a {@code .}, so a name looked up in this set can only ever match a
+     *         simple path. A flavor matches a name against this set in a predicate of its own; one which hands names to
+     *         its engine as data hands the simple paths only.
      */
     protected final Set<String> excludedPaths;
 }

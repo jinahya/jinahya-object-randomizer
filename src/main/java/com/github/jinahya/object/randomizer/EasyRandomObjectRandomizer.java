@@ -53,10 +53,10 @@ abstract class EasyRandomObjectRandomizer<T>
     /**
      * Creates a new instance for initializing a randomized instance of the specified class.
      *
-     * @param targetClass    the class to be randomized.
-     * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of
-     *                      {@code .} and white space, and rejoined with {@code .}, so that {@code " a . b "},
-     *                      {@code "a..b"}, and {@code "a b"} are all {@code "a.b"}; duplicates are dropped.
+     * @param targetClass   the class to be randomized.
+     * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of {@code .} and
+     *                      white space, and rejoined with {@code .}, so that {@code " a . b "}, {@code "a..b"}, and
+     *                      {@code "a b"} are all {@code "a.b"}; duplicates are dropped.
      * @throws NullPointerException     when either argument is {@code null}, or when an element is {@code null}.
      * @throws IllegalArgumentException when an element is left with no segment, as {@code ""}, {@code "  "}, and
      *                                  {@code "."} are.
@@ -108,14 +108,14 @@ abstract class EasyRandomObjectRandomizer<T>
      *         {@link FieldPredicates#named(String) FieldPredicates.named}, which treats its argument as a regular
      *         expression, so that both flavors read an exclusion the same way.
      *         <p>
-     *         Nested paths are excluded natively, by an {@link ExclusionPolicy} which matches the path Easy Random
-     *         has descended, {@link RandomizerContext#getCurrentField()}, followed by the field at hand. That path
-     *         descends into the elements of a collection, an array, and a map, so {@code "addresses.address1"} is
-     *         excluded on every element, as the other flavors reset it; a bean <em>key</em> of a map is excluded
-     *         too, which the others leave alone. The policy alone is not enough, though, for Easy Random
+     *         Nested paths are excluded natively, by an {@link ExclusionPolicy} which matches the path Easy Random has
+     *         descended, {@link RandomizerContext#getCurrentField()}, followed by the field at hand. That path descends
+     *         into the elements of a collection, an array, and a map, so {@code "addresses.address1"} is excluded on
+     *         every element, as the other flavors reset it; a bean <em>key</em> of a map is excluded too, which the
+     *         others leave alone. The policy alone is not enough, though, for Easy Random
      *         <em>shares</em> beans: once it has populated
-     *         {@link EasyRandomParameters#getObjectPoolSize() objectPoolSize} beans of a type, it hands out one of those
-     *         again, populated wherever it was first reached, so {@link #get()} resets the nested paths as well.
+     *         {@link EasyRandomParameters#getObjectPoolSize() objectPoolSize} beans of a type, it hands out one of
+     *         those again, populated wherever it was first reached, so {@link #get()} resets the nested paths as well.
      * @see EasyRandomParameters#excludeField(java.util.function.Predicate)
      * @see EasyRandomParameters#exclusionPolicy(ExclusionPolicy)
      * @see #getSeed()

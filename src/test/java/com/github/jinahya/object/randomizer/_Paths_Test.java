@@ -45,6 +45,17 @@ class _Paths_Test {
 
     }
 
+    enum Status {
+
+        ACTIVE("active");
+
+        Status(final String label) {
+            this.label = label;
+        }
+
+        String label;
+    }
+
     static class Root {
 
         Leaf leaf;
@@ -60,6 +71,10 @@ class _Paths_Test {
         NoDefaultConstructor odd;
 
         Pair pair;
+
+        Status status;
+
+        List<Status> statuses;
     }
 
     private static Leaf leaf() {
@@ -102,15 +117,27 @@ class _Paths_Test {
         assertThat(root.nested).allSatisfy(l -> assertThat(l).allSatisfy(e -> assertThat(e.value).isNull()));
     }
 
-    @DisplayName("an owner with no no-argument constructor is reset to the default of the type")
+    @DisplayName("an owner with no no-argument constructor keeps the slot as it is; nothing is made up")
     @Test
     void reset_NoDefaultConstructor() {
         final var root = new Root();
         root.odd = new NoDefaultConstructor("randomized", 3);
         _Paths.reset(root, List.of("odd", "value"));
         _Paths.reset(root, List.of("odd", "count"));
-        assertThat(root.odd.value).isNull();
-        assertThat(root.odd.count).isZero();
+        assertThat(root.odd.value).isEqualTo("randomized");
+        assertThat(root.odd.count).isEqualTo(3);
+    }
+
+    @DisplayName("an enum constant is never walked into, nor written on, alone or in a container")
+    @Test
+    void reset_EnumConstant_Untouched() {
+        final var root = new Root();
+        root.status = Status.ACTIVE;
+        root.statuses = List.of(Status.ACTIVE);
+        _Paths.reset(root, List.of("status", "label"));
+        _Paths.reset(root, List.of("statuses", "label"));
+        _Paths.reset(Status.ACTIVE, List.of("label"));
+        assertThat(Status.ACTIVE.label).isEqualTo("active");
     }
 
     @DisplayName("nothing fails: a null on the way, a name which matches nothing, and an unwritable slot")

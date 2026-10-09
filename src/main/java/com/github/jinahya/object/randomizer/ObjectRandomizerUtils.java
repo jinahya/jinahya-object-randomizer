@@ -67,8 +67,7 @@ public final class ObjectRandomizerUtils {
      * @param excludedPaths     the first iterable of excluded paths.
      * @param moreExcludedPaths the second iterable of excluded paths.
      * @return an unmodifiable {@link Iterable} of merged excluded paths.
-     * @throws NullPointerException when either argument is {@code null}, or when an element of either is
-     *                              {@code null}.
+     * @throws NullPointerException when either argument is {@code null}, or when an element of either is {@code null}.
      * @apiNote This method is for a subclass which adds to the exclusions of the randomizer it extends.
      *         Elements are concatenated as they are, in order, with no deduplication; the
      *         {@link AbstractObjectRandomizer#AbstractObjectRandomizer(Class, Iterable) randomizer constructor} strips

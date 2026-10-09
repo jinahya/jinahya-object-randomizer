@@ -53,10 +53,10 @@ public abstract class PodamObjectRandomizer<T>
     /**
      * Creates a new instance for initializing a randomized instance of the specified class.
      *
-     * @param targetClass    the class to be randomized.
-     * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of
-     *                      {@code .} and white space, and rejoined with {@code .}, so that {@code " a . b "},
-     *                      {@code "a..b"}, and {@code "a b"} are all {@code "a.b"}; duplicates are dropped.
+     * @param targetClass   the class to be randomized.
+     * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of {@code .} and
+     *                      white space, and rejoined with {@code .}, so that {@code " a . b "}, {@code "a..b"}, and
+     *                      {@code "a b"} are all {@code "a.b"}; duplicates are dropped.
      * @throws NullPointerException     when either argument is {@code null}, or when an element is {@code null}.
      * @throws IllegalArgumentException when an element is left with no segment, as {@code ""}, {@code "  "}, and
      *                                  {@code "."} are.
