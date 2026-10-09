@@ -52,7 +52,7 @@ excluded paths, and the three flavors extend that, one per engine.
 
 ## The three flavors
 
-| Flavor | Writes through | Uses `newTargetInstance()` | Exclusions scoped by | Bean validation |
+| Flavor | Writes through | Uses `newTargetInstance()` | Single names scoped by | Bean validation |
 | --- | --- | --- | --- | --- |
 | `PodamObjectRandomizer` | accessors only | yes | runtime class | on by default |
 | `InstancioObjectRandomizer` | reflection, fills a given instance | yes | field declaration | on by default |
@@ -78,33 +78,53 @@ The second constructor argument is a list of *paths*: names of the slots the eng
 leave alone. An exclusion is a hint — each engine discovers slots its own way, and honors a path as
 far as it can.
 
-- A **simple** path, such as `"id"`, goes to the engine's own exclusion mechanism, and is scoped as
-  the table above says.
-- A **nested** path, such as `"address.address1"`, is anchored at the target: the first segment
-  names a slot of the target, each next one a slot of what the previous reached. A segment which
-  reaches a collection, an array, an `Optional` or a map's values reaches every element, so
-  `"addresses.address1"` names the `address1` of every element of `addresses`.
+The word *path* is chosen ahead of what every engine can do. A **single name**, such as `"id"` or
+`"address"`, is what every flavor honors, by handing it to its engine. A **dotted path**, such as
+`"address.address1"`, is a best-effort extension: each flavor here honors it, within the limits
+below, but a flavor of another engine, or one written by hand, need not.
 
 ```java
 super(User.class, List.of("id", "address.address1"));
 ```
 
-A path under another one — `"address.postalCode"` beside `"address"` — is dropped, for the slot it
-names is never randomized anyway, and no engine should be handed a rule for a slot it was already
-told to leave alone.
+### Rules
 
-A nested slot is left at what a freshly constructed owner carries — the engine created that owner,
-so there is no earlier value to keep. Nothing else is ever written: an owner which can not be
-constructed afresh, through a no-argument constructor, keeps the slot as it is, and an enum constant,
-shared by the whole program, is never walked into. None of the three engines can exclude by a nested path
-exactly, so every flavor resets nested slots once its engine is done, through
-`resetNestedExcludedPaths(T)`; an override of `get()` can call it too. A path which names nothing is
-not an error. A path is split on runs of `.` and white space and rejoined with `.`, so
-`" a . b "`, `"a..b"` and `"a b"` are all `"a.b"`, and `"a."` is `"a"` — no engine is ever handed a
-name with white space in it. Segments are not verified otherwise, for what names a slot is the
-engine's to say. Only a `null` path, rejected with a
-`NullPointerException`, and one left with no segment — `""`, `"  "`, `"."` — rejected with an
-`IllegalArgumentException`, fail.
+- **A single name** goes to the engine's own exclusion mechanism, and is scoped as that engine
+  scopes an exclusion — see *Single names scoped by* in the table above, and below.
+- **A dotted path** is anchored at the target: the first segment names a slot of the target, each
+  next one a slot of what the previous one reached. A segment which reaches a collection, an array,
+  an `Optional` or a map's values reaches every element, so `"addresses.address1"` names the
+  `address1` of every element of `addresses`.
+- **A dotted slot is left at what a freshly constructed owner carries** — the engine created that
+  owner, so there is no earlier value to keep. Nothing else is ever written: an owner which can not
+  be constructed afresh, through a no-argument constructor, keeps the slot as the engine wrote it.
+- **Paths are normalized.** A path is split on runs of `.` and white space and rejoined with `.`,
+  so `" a . b "`, `"a..b"` and `"a b"` are all `"a.b"`, and `"a."` is `"a"`; no engine is ever
+  handed a name with white space in it. Segments are not verified otherwise, for what names a slot
+  is the engine's to say.
+- **A path under another one is dropped**: `"address.postalCode"` beside `"address"` names a slot
+  which is never randomized anyway, and no engine should be handed a rule for it.
+- **A path which names nothing is not an error**, for a subclass commonly passes a superset of
+  paths. Only a `null` path, rejected with a `NullPointerException`, and one left with no segment —
+  `""`, `"  "`, `"."` — rejected with an `IllegalArgumentException`, fail.
+
+### Per flavor
+
+| Flavor | A single name is excluded on | A dotted path is honored by | Caveat |
+| --- | --- | --- | --- |
+| `PodamObjectRandomizer` | the target, and any instance of the target type in the graph, such as a `friend` of the same type | a reset, once PODAM is done | the setter of the slot has run, side effects and all |
+| `InstancioObjectRandomizer` | every field of that name the target declares or inherits — on an associated type too, when inherited from a shared supertype | a reset, once Instancio is done | — |
+| `FixtureMonkeyObjectRandomizer` | the target type and its subclasses only | a reset, once sampled | it wins over a `getArbitraryBuilder()` override which sets that very slot |
+
+A flavor which resets does so through `resetNestedExcludedPaths(T)`, which an override of `get()`
+can call too.
+
+### Never excluded by a dotted path
+
+- a component of a record, and a field reflection can not reach — of a `java.*` class, or of a
+  module which does not open its package — left as the engine wrote it, and logged;
+- a key of a map, which would corrupt the map it is a key of;
+- anything on an enum constant, which is shared by the whole program and is never walked into.
 
 ## Bean validation
 

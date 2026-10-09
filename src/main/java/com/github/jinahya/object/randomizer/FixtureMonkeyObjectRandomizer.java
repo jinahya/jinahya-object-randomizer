@@ -32,6 +32,13 @@ import java.util.Objects;
  * artifact — the lookup is reflective, so leaving it off the classpath is not an error, only a
  * {@link System.Logger.Level#DEBUG DEBUG} line and constraints which go unread. The {@code javax} counterpart,
  * {@code fixture-monkey-javax-validation}, is the wrong one for this platform.
+ * <p>
+ * <strong>Excluded paths.</strong> A single name, such as {@code "id"}, is matched by a property generator of this
+ * class's against the properties of the {@link #targetClass}, and of its subclasses, only; a property of that name on
+ * an associated type is generated as usual. A dotted path, such as {@code "address.address1"}, is not expressed to
+ * Fixture Monkey, whose property generators see no place in the object graph; {@link #get()} resets the slot it names
+ * once the instance is sampled, and the exclusion wins over an override of {@link #getArbitraryBuilder()} which sets
+ * that very slot. Fixture Monkey assigns fields directly, so no setter runs. See {@link #getFixtureMonkey()}.
  *
  * @param <T> the type of the instances to randomize.
  * @implNote A no-argument constructor is <em>required</em>: the introspector resolves one reflectively and

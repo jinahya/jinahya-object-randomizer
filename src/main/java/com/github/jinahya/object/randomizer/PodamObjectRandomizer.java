@@ -33,6 +33,13 @@ import java.util.List;
  * and {@link InstancioObjectRandomizer} once {@link InstancioObjectRandomizer#getInstancioSettings() its settings} say
  * so. Read the {@code @implNote} below before treating this flavor as the safe default: its support is real, but
  * partial.
+ * <p>
+ * <strong>Excluded paths.</strong> A single name, such as {@code "id"}, is handed to PODAM as an excluded field name,
+ * for the {@link #targetClass} and for every class assignable to it, wherever PODAM meets one; it is therefore excluded
+ * on an instance of the target type reached through an association, too, such as a {@code friend} of the same type. A
+ * dotted path, such as {@code "address.address1"}, is no name PODAM understands, so it is never handed over;
+ * {@link #get()} resets the slot it names once PODAM is done. PODAM writes through setters, so the setter of such a
+ * slot has run, side effects and all, before the slot is reset. See {@link #getClassInfoStrategy()}.
  *
  * @param <T> the type of the instances to randomize.
  * @implNote Constraint support is partial, and is keyed to the <em>field</em>: an annotation declared on a

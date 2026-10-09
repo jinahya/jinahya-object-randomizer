@@ -22,6 +22,11 @@ import java.util.stream.StreamSupport;
  * An excluded path is a <em>hint</em>: the names of slots which the engine is asked not to randomize, matched against
  * whatever the engine discovers as slots, and honored as far as the engine allows. Each flavor documents what it
  * matches a path against, and what it can not exclude.
+ * <p>
+ * The word <em>path</em> is chosen ahead of what every engine can do. A single name, such as {@code "address"}, is
+ * what every flavor honors, by handing it to its engine. A dotted path, such as {@code "address.address1"}, is a
+ * best-effort extension: each flavor declared here honors it, natively or by a reset of its own, within the limits its
+ * documentation states, but a flavor of another engine, or one written by hand, need not.
  * <ul>
  *   <li>A <em>simple</em> path, of a single segment such as {@code "id"}, is handed to the engine's own exclusion
  *       mechanism, and so is scoped as that engine scopes an exclusion; read each flavor's documentation before
@@ -36,6 +41,11 @@ import java.util.stream.StreamSupport;
  *       {@link #resetNestedExcludedPaths(Object)}.</li>
  * </ul>
  * A path which names nothing is not an error, for a subclass commonly passes a superset of paths.
+ * <p>
+ * Some slots are never excluded by a dotted path, whatever the flavor: a component of a record, and a field which
+ * reflection can not reach, such as one of a {@code java.*} class or of a module which does not open its package,
+ * are left as the engine wrote them, and logged; a key of a map is never reset; and an enum constant, shared by the
+ * whole of the program, is never walked into.
  *
  * @param <T> the type of the instances to randomize.
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;

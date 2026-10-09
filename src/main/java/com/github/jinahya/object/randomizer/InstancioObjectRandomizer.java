@@ -34,6 +34,13 @@ import org.instancio.settings.Settings;
  *             .set(Keys.JPA_ENABLED, true);
  * }
  * }</pre>
+ * <p>
+ * <strong>Excluded paths.</strong> A single name, such as {@code "id"}, is matched by a selector of this class's
+ * against every field of that name which the runtime class of the instance declares or inherits; a field which the
+ * target class inherits from a supertype it shares with an associated type is therefore excluded on both. A dotted
+ * path, such as {@code "address.address1"}, is not expressed to Instancio, whose scopes can not anchor it exactly;
+ * {@link #get()} resets the slot it names once Instancio is done. Instancio assigns fields directly, so no setter
+ * runs. See {@link #getInstancio(Object)}.
  *
  * @param <T> the type of the instances to randomize.
  * @implNote {@link Instancio#ofObject(Object)}, and the {@link InstancioObjectApi#fill() fill()} which

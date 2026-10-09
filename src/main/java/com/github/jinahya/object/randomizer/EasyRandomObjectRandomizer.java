@@ -35,6 +35,15 @@ import java.util.concurrent.ThreadLocalRandom;
  * {@code jakarta.validation.constraints} is randomized as if it declared no constraints at all — silently, and without
  * an error. Use {@link PodamObjectRandomizer}, which honors them by default, or {@link InstancioObjectRandomizer} or
  * {@link FixtureMonkeyObjectRandomizer}, each of which honors them once configured to.
+ * <p>
+ * <strong>Excluded paths.</strong> A single name, such as {@code "id"}, is matched by a field predicate of this
+ * class's against every field of that name which the {@link #targetClass} declares or inherits, wherever in the graph
+ * Easy Random meets one. A dotted path, such as {@code "address.address1"}, is excluded natively, by an exclusion
+ * policy which matches the path Easy Random has descended &mdash; into the elements of a collection and of an array,
+ * and into both the keys and the values of a map &mdash; and {@link #get()} resets it as well, for Easy Random shares
+ * pooled beans between slots: a bean so shared has the slot excluded wherever it is reached. Only on such a bean has
+ * the slot been populated at all, through its setter where there is one, before it is reset. See
+ * {@link #getEasyRandomParameters()}.
  *
  * @param <T> the type of the instances to randomize.
  * @implNote Easy Random 6 is a single artifact — {@code org.jeasy:easy-random} — replacing the 5.x
