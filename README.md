@@ -80,8 +80,8 @@ far as it can.
 
 The word *path* is chosen ahead of what every engine can do. A **single name**, such as `"id"` or
 `"address"`, is what every flavor honors, by handing it to its engine. A **dotted path**, such as
-`"address.address1"`, is honored only by a flavor whose engine can exclude by path — of those
-here, `EasyRandomObjectRandomizer` alone; the others ignore it. Anything more is yours to do, by
+`"address.address1"`, is honored only by a flavor whose engine can exclude by path — none of
+those here can, so each ignores it. Anything more is yours to do, by
 overriding `get()` and adjusting what the engine returns.
 
 ```java
@@ -113,7 +113,6 @@ super(User.class, List.of("id", "address.address1"));
 | `PodamObjectRandomizer` | the target, and any instance of the target type in the graph, such as a `friend` of the same type | ignored |
 | `InstancioObjectRandomizer` | every field of that name the target declares or inherits — on an associated type too, when inherited from a shared supertype | ignored |
 | `FixtureMonkeyObjectRandomizer` | the target type and its subclasses only | ignored |
-| `EasyRandomObjectRandomizer` | every field of that name the target declares or inherits, wherever in the graph Easy Random meets one | excluded natively, on every element of a collection or an array and every key and value of a map — except on a pooled bean, which Easy Random may have populated where no path excluded the slot |
 
 ### Beyond what an engine can exclude
 
@@ -136,6 +135,11 @@ class UserRandomizer extends PodamObjectRandomizer<User> {
 ```
 
 ## Bean validation
+
+**Whether a randomized instance is valid is not this module's concern.** Each flavor turns on its
+engine's own constraint support, and how far a constraint is honored is the engine's to say; this
+module never reads a constraint, nor runs a `Validator`. Validate an instance before taking it to be
+a valid one.
 
 All three flavors honor `jakarta.validation.constraints` **without being configured to**. Nothing
 is overridden, in any of them:
@@ -222,7 +226,7 @@ Where the alignment comes from:
   choosing a provider.
 
 Nothing outside the two profiles is allowed to move these versions. `fixture-monkey-jakarta-validation`
-declares a complete Jakarta EE 9 stack at `compile` scope (see [Fixture Monkey](#fixture-monkey)).
+declares a complete Jakarta EE 9 stack at `compile` scope (see [Fixture Monkey](#comnavercorpfixturemonkeyfixture-monkey-jakarta-validation)).
 This build excludes all three of its artifacts, so the active profiles supply the API, the
 expression language and the provider. Without the exclusion, Hibernate Validator 7 would be a
 second provider in every `apache-bval` run. `_Validation_Provider_Test` guards against this: it
@@ -256,7 +260,9 @@ This module is the same in all three cases:
 
 ### PODAM
 
-One artifact. Constraints are honored with nothing else declared.
+One artifact. Constraints are honored with nothing else declared: PODAM reads them through its own
+`BeanValidationStrategy`, unasked, so there is nothing for `PodamObjectRandomizer` to turn on, nor
+an override of its own to turn it off.
 
 ```xml
 <dependency>
@@ -267,8 +273,9 @@ One artifact. Constraints are honored with nothing else declared.
 
 ### Instancio
 
-One artifact. `instancio-core` carries the constraint support, which
-`InstancioObjectRandomizer` enables by default.
+One artifact. `instancio-core` carries the constraint support, but Instancio leaves it off;
+`InstancioObjectRandomizer` turns it on, by setting `Keys.BEAN_VALIDATION_ENABLED` to `true` in
+`getInstancioSettings()`. Override that method to clear the key.
 
 ```xml
 <dependency>
@@ -279,8 +286,9 @@ One artifact. `instancio-core` carries the constraint support, which
 
 ### Fixture Monkey
 
-**Two** artifacts, and the second is what makes constraints work. Leave it out and the engine fills
-your instances while ignoring every constraint on them — with one `DEBUG` line to say so.
+**Two** artifacts: the engine, and a plugin which is what makes constraints work. Leave the second
+out and the engine fills your instances while ignoring every constraint on them — with one `DEBUG`
+line to say so.
 
 ```xml
 <dependency>
@@ -293,14 +301,59 @@ your instances while ignoring every constraint on them — with one `DEBUG` line
 </dependency>
 ```
 
-Two things to know about that second artifact. It declares a complete **Jakarta EE 9** stack at
-`compile` scope — `hibernate-validator` 7.0.5.Final, `jakarta.validation-api` 3.0.2 and
-`org.glassfish:jakarta.el` 4.0.2 — which will quietly downgrade an EE 10 or EE 11 classpath. And
-`com.navercorp.fixturemonkey:fixture-monkey` pulls in **jqwik**, including `jqwik-engine`, a JUnit
-Platform `TestEngine` that then registers itself alongside Jupiter. Neither is a defect; both are
-surprises worth meeting on purpose.
+Each of the two brings along more than you may want on your classpath; they follow one at a time,
+with what to do about it.
 
-For the first, exclude the three and let your own platform generation stand:
+#### `com.navercorp.fixturemonkey:fixture-monkey`
+
+It pulls in **jqwik**, a property-based testing library whose generators are how Fixture Monkey
+generates its values. Do not exclude it — nothing would be left to generate a value. jqwik ships its
+generators in `jqwik-engine`, which is also a JUnit Platform `TestEngine`, so it registers itself
+alongside Jupiter, and it brings an older JUnit Platform along — `junit-platform-engine` and
+`junit-platform-commons`, through jqwik and directly through `fixture-monkey-engine`.
+
+Those are never the JUnit you want; yours is. Manage it, with its BOM, so that every JUnit artifact,
+those an engine brings along included, resolves to your version — rather than to whichever one
+Maven happens to pick, which can fail a run before it starts:
+
+```xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.junit</groupId>
+      <artifactId>junit-bom</artifactId>
+      <version><!-- the version of your junit-jupiter --></version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+```
+
+That settles which JUnit Platform you get, not whether jqwik works with it — that is jqwik's to say,
+not this module's. Excluding `org.junit.platform` from `fixture-monkey` leaves the same question
+open. So run it: whether Fixture Monkey works with your JUnit is something your build tells you,
+and this module verifies it only with the JUnit it builds and smoke-tests with.
+
+#### `com.navercorp.fixturemonkey:fixture-monkey-jakarta-validation`
+
+`FixtureMonkeyObjectRandomizer` does not depend on this artifact; it looks for the plugin by name
+instead. The first time `getFixtureMonkey()` runs, it loads
+`com.navercorp.fixturemonkey.jakarta.validation.plugin.JakartaValidationPlugin` and instantiates it
+through its public no-argument constructor, once. Then:
+
+- **Found** — `getFixtureMonkey()` registers that one instance on every `FixtureMonkey` it builds.
+- **Not on the classpath** — nothing is registered, and the `DEBUG` line is logged.
+- **On the classpath, but failing to instantiate** — nothing is registered either, and a `WARNING`
+  is logged with the cause.
+
+Either line is logged once, not on every call. Replace `getFixtureMonkey()` to build without the
+plugin.
+
+The artifact declares a complete **Jakarta EE 9** stack at `compile` scope — `hibernate-validator`
+7.0.5.Final, `jakarta.validation-api` 3.0.2 and `org.glassfish:jakarta.el` 4.0.2 — which will
+quietly downgrade an EE 10 or EE 11 classpath. Exclude the three and let your own platform
+generation stand:
 
 ```xml
 <dependency>
@@ -323,38 +376,15 @@ For the first, exclude the three and let your own platform generation stand:
 </dependency>
 ```
 
-Excluding is safe only because you replace them. The plugin's own bytecode references
-`jakarta.validation` and nothing else — not one class in it mentions Hibernate — so the API has to
-be there, at your generation. An implementation has to be there too: the plugin's
-`JakartaArbitraryValidator` calls `Validation.buildDefaultValidatorFactory()`, which resolves one by
-service lookup and throws when none is on the classpath. A consumer that annotates its own classes
-already declares the API, and one that asserts a randomized instance is valid already declares an
-implementation — which is why excluding costs nothing in practice. If you declare neither, pin the
-versions instead of excluding.
+Excluding is safe only because you replace them. The plugin's documentation says the API and
+Hibernate Validator are "already provided as part of the dependency", so once you exclude them, both
+are yours to provide: the API, at your generation, and an implementation of it. A consumer that
+annotates its own classes already declares the API, and one that asserts a randomized instance is
+valid already declares an implementation — which is why excluding costs nothing in practice. If you
+declare neither, pin the versions instead of excluding.
 
 Note also that `org.glassfish:jakarta.el` is the superseded expression-language implementation;
 `org.glassfish.expressly:expressly` is its successor and what Hibernate Validator 8 and 9 expect.
-
-For the second, import `junit-bom`. Fixture Monkey also brings an older `junit-platform-engine`, at
-the same depth as the one Jupiter brings, and Maven takes whichever is declared first; with
-`fixture-monkey` declared ahead of `junit-jupiter`, a JUnit 6 run then fails to start, with a
-`NoClassDefFoundError` for `org/junit/platform/engine/support/store/NamespacedHierarchicalStore`. The
-BOM pins every JUnit artifact, the transitive ones included, to one version. Excluding is no fix,
-for jqwik is how Fixture Monkey generates its values:
-
-```xml
-<dependencyManagement>
-  <dependencies>
-    <dependency>
-      <groupId>org.junit</groupId>
-      <artifactId>junit-bom</artifactId>
-      <version><!-- your JUnit version --></version>
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
-  </dependencies>
-</dependencyManagement>
-```
 
 Finally, `fixture-monkey-javax-validation` is the wrong artifact for this platform — the `javax`
 annotations are not the ones any of these engines read.

@@ -56,9 +56,8 @@ import java.util.stream.StreamSupport;
  *       the segments before it reach. A segment which reaches a collection, an array, an {@link java.util.Optional},
  *       or a {@link java.util.Map}, reaches every element in it, so {@code "addresses.address1"} names the
  *       {@code address1} of every element of {@code addresses}; whether a key of a map is reached, too, is the
- *       engine's to say. Only {@link EasyRandomObjectRandomizer} hands
- *       a nested path to its engine; {@link PodamObjectRandomizer}, {@link InstancioObjectRandomizer}, and
- *       {@link FixtureMonkeyObjectRandomizer} ignore it, for their engines can not exclude by path.</li>
+ *       engine's to say. {@link PodamObjectRandomizer}, {@link InstancioObjectRandomizer}, and
+ *       {@link FixtureMonkeyObjectRandomizer} ignore a nested path, for their engines can not exclude by path.</li>
  * </ul>
  * A path which names nothing is not an error, for a subclass commonly passes a superset of paths.
  *
