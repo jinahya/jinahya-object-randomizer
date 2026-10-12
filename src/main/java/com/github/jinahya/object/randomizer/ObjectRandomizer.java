@@ -20,6 +20,8 @@ package com.github.jinahya.object.randomizer;
  * #L%
  */
 
+import jakarta.validation.constraints.NotNull;
+
 import java.util.function.Supplier;
 
 /**
@@ -42,8 +44,12 @@ public interface ObjectRandomizer<T>
     /**
      * Returns a randomized instance of the class this randomizer is for.
      *
-     * @return a randomized instance.
+     * @return a randomized instance; never {@code null}.
+     * @apiNote The {@link NotNull} on the return value states the contract; nothing enforces it, for a randomizer is
+     *         instantiated, and called, directly. {@link ObjectRandomizerUtils#newRandomizedInstanceOf(Class)} drops a
+     *         {@code null} as the product of a broken randomizer.
      */
+    @NotNull
     @Override
     T get();
 }
