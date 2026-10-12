@@ -41,6 +41,59 @@
  * {@link com.github.jinahya.object.randomizer.ObjectRandomizer} nor
  * {@link com.github.jinahya.object.randomizer.AbstractObjectRandomizer} references an engine at all.
  *
+ * <h2>Caveats</h2>
+ * <strong>This library delegates; it does not randomize.</strong> A flavor hands the target class, and the paths to
+ * exclude, to its engine, and returns what the engine produces. It neither implements, extends, nor patches an
+ * engine, and so it promises nothing about a value beyond what that engine itself promises.
+ * <p>
+ * <strong>No engine is promised to honor every {@code jakarta.validation.constraints} annotation</strong>, and fewer
+ * still are promised to honor several of them on the one slot at once. {@code @Pattern} is the usual casualty, since
+ * producing a string which matches an arbitrary regular expression, <em>and</em> satisfies the other constraints
+ * beside it, is a hard problem in its own right. Given
+ * <pre>
+ * &#64;Pattern(regexp = "\\d+")
+ * &#64;Size(min = 1, max = 2)
+ * private String number;
+ * </pre>
+ * an engine may well honor the {@code @Size} and ignore the {@code @Pattern}, yielding something like
+ * {@code "x$"}. A randomized instance is therefore not assumed to be a valid one; validate it, where validity
+ * matters.
+ * <p>
+ * <strong>Nor is what an engine produces always what a caller wants</strong>, even when every constraint is honored.
+ * Given
+ * <pre>
+ * &#64;Email
+ * &#64;Size(min = 6, max = 255)
+ * private String email;
+ * </pre>
+ * an engine which honors both still gives no promise that two instances never share an address, while a table may
+ * declare the column {@code UNIQUE}.
+ * <p>
+ * Both gaps are closed the same way: <strong>every randomizer may override {@code get()}</strong>, and adjust the
+ * instance the engine returns before handing it over. That is the one sanctioned hook, and it is always there,
+ * whichever flavor is extended:
+ * <pre>{@code
+ * class FooRandomizer extends PodamObjectRandomizer<Foo> {
+ *
+ *     FooRandomizer() {
+ *         super(Foo.class, List.of("id"));
+ *     }
+ *
+ *     @Override
+ *     public Foo get() {
+ *         final var value = super.get();
+ *         final var random = ThreadLocalRandom.current();
+ *         // the engine may not have honored the @Pattern
+ *         value.setNumber(Integer.toString(random.nextInt(100)));
+ *         // honored or not, make the @Email unique enough for a UNIQUE column
+ *         value.setEmail(UUID.randomUUID().toString().replace("-", "") + "@example.com");
+ *         return value;
+ *     }
+ * }
+ * }</pre>
+ * Note that a value written in {@code get()} has to satisfy every constraint on its slot by itself; above, the
+ * {@code number} is one or two digits, and the {@code email} is 44 characters.
+ *
  * <h2>Conventions</h2>
  * For a target class {@code Foo}, the convention probes {@code FooRandomizer} and then {@code Foo_Randomizer}: the
  * binary name of {@code Foo} with a postfix appended, wherever the class loader of {@code Foo} finds it. That is the
@@ -50,15 +103,31 @@
  * therefore has to be declared as a top-level class to have a randomizer under {@code test}.
  *
  * <h2>Example</h2>
- * Given a class {@code Foo}, declare, in the same package:
+ * Given a class {@code Foo} in a package {@code com.example},
  * <pre>{@code
+ * package com.example;
+ *
+ * public class Foo {
+ *     private Long id;
+ *     private String name;
+ *     // getters and setters
+ * }
+ * }</pre>
+ * declare its randomizer in the <em>same package</em>, {@code com.example}, in this or any other source set:
+ * <pre>{@code
+ * package com.example;
+ *
+ * import com.github.jinahya.object.randomizer.PodamObjectRandomizer;
+ * import java.util.List;
+ *
  * class FooRandomizer extends PodamObjectRandomizer<Foo> {
  *     FooRandomizer() {
  *         super(Foo.class, List.of("id"));  // leave the generated identifier alone
  *     }
  * }
  * }</pre>
- * and a caller then obtains a randomized instance with a single call:
+ * and a caller then obtains a randomized instance with a single call, the convention locating
+ * {@code com.example.FooRandomizer}:
  * <pre>{@code
  * final var foo = ObjectRandomizerUtils.newRandomizedInstanceOf(Foo.class).orElseThrow();
  * }</pre>
