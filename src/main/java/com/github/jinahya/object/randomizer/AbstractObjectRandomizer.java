@@ -24,9 +24,9 @@ import java.util.stream.StreamSupport;
  * matches a path against, and what it can not exclude.
  * <p>
  * The word <em>path</em> is chosen ahead of what every engine can do. A single name, such as {@code "address"}, is what
- * every flavor honors, by handing it to its engine. A dotted path, such as {@code "address.address1"}, is a best-effort
- * extension: each flavor declared here honors it, natively or by a reset of its own, within the limits its
- * documentation states, but a flavor of another engine, or one written by hand, need not.
+ * every flavor honors, by handing it to its engine. A dotted path, such as {@code "address.address1"}, is honored only
+ * by a flavor whose engine can exclude by path, within the limits its documentation states; every other flavor
+ * ignores it. A subclass which needs more overrides {@link #get()}, and adjusts what the engine returns.
  * <ul>
  *   <li>A <em>simple</em> path, of a single segment such as {@code "id"}, is handed to the engine's own exclusion
  *       mechanism, and so is scoped as that engine scopes an exclusion; read each flavor's documentation before
@@ -34,18 +34,13 @@ import java.util.stream.StreamSupport;
  *   <li>A <em>nested</em> path, of {@code .}-separated segments such as {@code "address.address1"}, is anchored at
  *       the target instance: its first segment names a slot of the target, and each of the others a slot of the object
  *       the segments before it reach. A segment which reaches a collection, an array, an {@link java.util.Optional},
- *       or the values of a {@link java.util.Map}, reaches every element in it, so {@code "addresses.address1"} names
- *       the {@code address1} of every element of {@code addresses}. A slot so named is left at the value which a
- *       freshly constructed owner carries in it &mdash; for an owner the engine created itself, there is no other value
- *       to keep. A flavor whose engine can not exclude by path resets those slots once the engine is done, through
- *       {@link #resetNestedExcludedPaths(Object)}.</li>
+ *       or a {@link java.util.Map}, reaches every element in it, so {@code "addresses.address1"} names the
+ *       {@code address1} of every element of {@code addresses}; whether a key of a map is reached, too, is the
+ *       engine's to say. Only {@link EasyRandomObjectRandomizer} hands
+ *       a nested path to its engine; {@link PodamObjectRandomizer}, {@link InstancioObjectRandomizer}, and
+ *       {@link FixtureMonkeyObjectRandomizer} ignore it, for their engines can not exclude by path.</li>
  * </ul>
  * A path which names nothing is not an error, for a subclass commonly passes a superset of paths.
- * <p>
- * Some slots are never excluded by a dotted path, whatever the flavor: a component of a record, and a field which
- * reflection can not reach, such as one of a {@code java.*} class or of a module which does not open its package,
- * are left as the engine wrote them, and logged; a key of a map is never reset; and an enum constant, shared by the
- * whole of the program, is never walked into.
  *
  * @param <T> the type of the instances to randomize.
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
@@ -66,7 +61,8 @@ public abstract class AbstractObjectRandomizer<T>
      * @param targetClass   the class to be randomized.
      * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of {@code .} and
      *                      white space, and rejoined with {@code .}, so that {@code " a . b "}, {@code "a..b"}, and
-     *                      {@code "a b"} are all {@code "a.b"}; duplicates are dropped.
+     *                      {@code "a b"} are all {@code "a.b"}; duplicates are dropped, and so is a path under
+     *                      another one, such as {@code "address.city"} beside {@code "address"}.
      * @throws NullPointerException     when either argument is {@code null}, or when an element is {@code null}.
      * @throws IllegalArgumentException when an element is left with no segment, as {@code ""}, {@code "  "}, and
      *                                  {@code "."} are.
@@ -112,32 +108,6 @@ public abstract class AbstractObjectRandomizer<T>
      */
     protected T newTargetInstance() {
         return _Utils.newInstance(targetClass);
-    }
-
-    /**
-     * Resets, on the specified randomized instance, every slot which a nested path of {@link #excludedPaths} names, to
-     * the value which a freshly constructed owner of that slot carries in it.
-     *
-     * @param instance the randomized instance.
-     * @return the {@code instance}, as reset.
-     * @throws NullPointerException when the {@code instance} is {@code null}.
-     * @apiNote This is the fallback of a flavor whose engine can not exclude by path; an override of
-     *         {@link #get()}, randomizing by hand or with an engine of its own, may call it likewise. Simple paths are
-     *         not touched, for they are the engine's to honor.
-     * @implNote Slots are found, and reset, by reflection, on the declared fields of the runtime class of each
-     *         owner and of its superclasses. A fresh owner is constructed through its no-argument constructor, one per
-     *         reset slot, so that a mutable value that constructor assigns is never shared. Nothing is written which is
-     *         not taken from such a fresh owner: an owner whose class has no usable one keeps the slot as it is, as
-     *         does a slot which can be neither read nor written, such as a component of a record, each logged. An enum
-     *         constant, being shared by the whole of the program, is never walked into, and a key of a map is never
-     *         reset.
-     */
-    protected T resetNestedExcludedPaths(final T instance) {
-        Objects.requireNonNull(instance, "instance is null");
-        excludedPaths.stream()
-                .filter(_Paths::isNested)
-                .forEach(v -> _Paths.reset(instance, _Paths.segments(v)));
-        return instance;
     }
 
 // ---------------------------------------------------------------------------------------------------------------------

@@ -2,152 +2,88 @@ package com.github.jinahya.object.randomizer;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Tests {@link _Paths#reset(Object, List)}.
+ * Tests {@link _Paths}.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @SuppressWarnings({
-        "java:S101" // Class names should comply with a naming convention
+        "java:S101", // Class names should comply with a naming convention
+        "java:S3577" // Test classes should comply with a naming convention
 })
 class _Paths_Test {
 
-    static class Leaf {
+    // ------------------------------------------------------------------------------------------------------- normalize
 
-        String value;
-
-        int count = 7;
-
-        List<String> tags = new ArrayList<>();
+    @DisplayName("runs of dots, white space, and space separators separate segments, and the path is rejoined")
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "id          | id",
+            "' id '      | id",
+            "a.b         | a.b",
+            "a..b        | a.b",
+            "' a . b '   | a.b",
+            "'a b'       | a.b",
+            "'a\tb'      | a.b",
+            "a.          | a",
+            ".a          | a",
+            "e-f.1g      | e-f.1g"
+    })
+    void normalize(final String path, final String expected) {
+        assertThat(_Paths.normalize(path)).isEqualTo(expected);
     }
 
-    static class NoDefaultConstructor {
-
-        NoDefaultConstructor(final String value, final int count) {
-            this.value = value;
-            this.count = count;
-        }
-
-        String value;
-
-        int count;
+    @DisplayName("a no-break space, and an ideographic space, separate segments too")
+    @ParameterizedTest
+    @ValueSource(strings = {"a b", "a　b", "a\n.b"})
+    void normalize_SpaceSeparators(final String path) {
+        assertThat(_Paths.normalize(path)).isEqualTo("a.b");
     }
 
-    record Pair(String value) {
-
+    @DisplayName("a path with no segment is rejected")
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\t", " ", ".", " . ", "..", ". \t ."})
+    void normalize_IllegalArgumentException_NoSegment(final String path) {
+        assertThatThrownBy(() -> _Paths.normalize(path)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    enum Status {
+    // ----------------------------------------------------------------------------------------------------------- prune
 
-        ACTIVE("active");
-
-        Status(final String label) {
-            this.label = label;
-        }
-
-        String label;
-    }
-
-    static class Root {
-
-        Leaf leaf;
-
-        Leaf[] array;
-
-        Map<String, Leaf> map;
-
-        Optional<Leaf> optional;
-
-        List<List<Leaf>> nested;
-
-        NoDefaultConstructor odd;
-
-        Pair pair;
-
-        Status status;
-
-        List<Status> statuses;
-    }
-
-    private static Leaf leaf() {
-        final var leaf = new Leaf();
-        leaf.value = "randomized";
-        leaf.count = 1;
-        leaf.tags = new ArrayList<>(List.of("randomized"));
-        return leaf;
-    }
-
-    @DisplayName("a slot is reset to what a fresh owner carries, and a fresh value is never shared")
+    @DisplayName("a path under another one is pruned, segment by segment, and nothing else")
     @Test
-    void reset_FreshValue() {
-        final var root = new Root();
-        root.array = new Leaf[]{leaf(), leaf()};
-        _Paths.reset(root, List.of("array", "count"));
-        _Paths.reset(root, List.of("array", "tags"));
-        assertThat(root.array).allSatisfy(l -> {
-            assertThat(l.count).isEqualTo(7);
-            assertThat(l.tags).isEmpty();
-            assertThat(l.value).isEqualTo("randomized");
-        });
-        assertThat(root.array[0].tags).isNotSameAs(root.array[1].tags);
+    void prune() {
+        final var pruned = _Paths.prune(Set.of("a", "a.b", "a.b.c", "ab.c", "x.y", "x.y.z", "x.yz", "p.q.r"));
+        assertThat(pruned).containsExactlyInAnyOrder("a", "ab.c", "x.y", "x.yz", "p.q.r");
     }
 
-    @DisplayName("containers are reached through: arrays, map values, optionals, and nested collections")
+    @DisplayName("the pruned set is unmodifiable")
     @Test
-    void reset_Containers() {
-        final var root = new Root();
-        root.leaf = leaf();
-        root.map = Map.of("k", leaf());
-        root.optional = Optional.of(leaf());
-        root.nested = List.of(List.of(leaf(), leaf()), List.of(leaf()));
-        for (final var head : List.of("leaf", "map", "optional", "nested")) {
-            _Paths.reset(root, List.of(head, "value"));
-        }
-        assertThat(root.leaf.value).isNull();
-        assertThat(root.map.get("k").value).isNull();
-        assertThat(root.optional.orElseThrow().value).isNull();
-        assertThat(root.nested).allSatisfy(l -> assertThat(l).allSatisfy(e -> assertThat(e.value).isNull()));
+    void prune_Unmodifiable() {
+        final var pruned = _Paths.prune(Set.of("a"));
+        assertThatThrownBy(() -> pruned.add("b")).isInstanceOf(UnsupportedOperationException.class);
     }
 
-    @DisplayName("an owner with no no-argument constructor keeps the slot as it is; nothing is made up")
+    @DisplayName("an empty set prunes to an empty set")
     @Test
-    void reset_NoDefaultConstructor() {
-        final var root = new Root();
-        root.odd = new NoDefaultConstructor("randomized", 3);
-        _Paths.reset(root, List.of("odd", "value"));
-        _Paths.reset(root, List.of("odd", "count"));
-        assertThat(root.odd.value).isEqualTo("randomized");
-        assertThat(root.odd.count).isEqualTo(3);
+    void prune_Empty() {
+        assertThat(_Paths.prune(Set.of())).isEmpty();
     }
 
-    @DisplayName("an enum constant is never walked into, nor written on, alone or in a container")
-    @Test
-    void reset_EnumConstant_Untouched() {
-        final var root = new Root();
-        root.status = Status.ACTIVE;
-        root.statuses = List.of(Status.ACTIVE);
-        _Paths.reset(root, List.of("status", "label"));
-        _Paths.reset(root, List.of("statuses", "label"));
-        _Paths.reset(Status.ACTIVE, List.of("label"));
-        assertThat(Status.ACTIVE.label).isEqualTo("active");
-    }
+    // -------------------------------------------------------------------------------------------------------- isNested
 
-    @DisplayName("nothing fails: a null on the way, a name which matches nothing, and an unwritable slot")
-    @Test
-    void reset_PassesOver() {
-        final var root = new Root();
-        root.pair = new Pair("randomized");
-        _Paths.reset(root, List.of("leaf", "value"));       // null on the way
-        _Paths.reset(root, List.of("nothing", "value"));    // no such field
-        _Paths.reset(root, List.of("pair", "value"));       // a record component, which is never writable
-        assertThat(root.pair.value()).isEqualTo("randomized");
+    @DisplayName("a path of more than one segment is nested; one of a single segment is simple")
+    @ParameterizedTest
+    @CsvSource({"id, false", "a.b, true", "a.b.c, true"})
+    void isNested(final String path, final boolean expected) {
+        assertThat(_Paths.isNested(path)).isEqualTo(expected);
     }
 }

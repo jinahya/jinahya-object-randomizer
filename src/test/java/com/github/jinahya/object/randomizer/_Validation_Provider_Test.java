@@ -14,7 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @SuppressWarnings({
-        "java:S101" // Class names should comply with a naming convention
+        "java:S101", // Class names should comply with a naming convention
+        "java:S3577" // Test classes should comply with a naming convention
 })
 class _Validation_Provider_Test {
 
@@ -28,7 +29,7 @@ class _Validation_Provider_Test {
      */
     @DisplayName("the one validation provider found is the one of the active profile")
     @Test
-    void provider_OfTheActiveProfile_() {
+    void provider_IsTheOneOfTheActiveProfile() {
         final var expected = System.getProperty("jakarta.validation.provider");
         assertThat(expected).as("the property the active jakarta-ee-NN-PROVIDER profile sets").isNotNull();
         assertThat(ServiceLoader.load(ValidationProvider.class).stream().map(ServiceLoader.Provider::type))

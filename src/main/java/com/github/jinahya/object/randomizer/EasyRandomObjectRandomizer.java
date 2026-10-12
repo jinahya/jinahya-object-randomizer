@@ -40,9 +40,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * class's against every field of that name which the {@link #targetClass} declares or inherits, wherever in the graph
  * Easy Random meets one. A dotted path, such as {@code "address.address1"}, is excluded natively, by an exclusion
  * policy which matches the path Easy Random has descended &mdash; into the elements of a collection and of an array,
- * and into both the keys and the values of a map &mdash; and {@link #get()} resets it as well, for Easy Random shares
- * pooled beans between slots: a bean so shared has the slot excluded wherever it is reached. Only on such a bean has
- * the slot been populated at all, through its setter where there is one, before it is reset. See
+ * and into both the keys and the values of a map. Easy Random shares pooled beans between slots, though, so a bean
+ * populated where no path excludes the slot may be handed out again where one does, with the slot populated. See
  * {@link #getEasyRandomParameters()}.
  *
  * @param <T> the type of the instances to randomize.
@@ -120,11 +119,11 @@ abstract class EasyRandomObjectRandomizer<T>
      *         Nested paths are excluded natively, by an {@link ExclusionPolicy} which matches the path Easy Random has
      *         descended, {@link RandomizerContext#getCurrentField()}, followed by the field at hand. That path descends
      *         into the elements of a collection, an array, and a map, so {@code "addresses.address1"} is excluded on
-     *         every element, as the other flavors reset it; a bean <em>key</em> of a map is excluded too, which the
-     *         others leave alone. The policy alone is not enough, though, for Easy Random
-     *         <em>shares</em> beans: once it has populated
+     *         every element, and on a bean <em>key</em> of a map too. The policy is not the whole story, though, for
+     *         Easy Random <em>shares</em> beans: once it has populated
      *         {@link EasyRandomParameters#getObjectPoolSize() objectPoolSize} beans of a type, it hands out one of
-     *         those again, populated wherever it was first reached, so {@link #get()} resets the nested paths as well.
+     *         those again, populated wherever it was first reached, so a nested path holds only where the bean was
+     *         first populated.
      * @see EasyRandomParameters#excludeField(java.util.function.Predicate)
      * @see EasyRandomParameters#exclusionPolicy(ExclusionPolicy)
      * @see #getSeed()
@@ -166,11 +165,7 @@ abstract class EasyRandomObjectRandomizer<T>
      *
      * @return {@inheritDoc}
      * @implSpec Returns a new object of the {@link #targetClass}, from a randomizer of the
-     *         {@link #getEasyRandom() easyRandom} method, with the slots which nested excluded paths name
-     *         {@link #resetNestedExcludedPaths(Object) reset}. The parameters exclude those slots already, but a bean
-     *         which Easy Random shares between two slots is populated where it is first reached; the reset makes the
-     *         exclusion hold wherever else it is reached. A bean so shared with a slot which no path excludes has its
-     *         excluded slot reset there too, for it is one and the same object.
+     *         {@link #getEasyRandom() easyRandom} method.
      * @implNote Unlike {@link PodamObjectRandomizer} and {@link InstancioObjectRandomizer}, this class does not
      *         use the {@link #newTargetInstance()} method; Easy Random instantiates the {@link #targetClass} itself,
      *         through the {@link org.jeasy.random.ObjenesisObjectFactory} which
@@ -184,6 +179,6 @@ abstract class EasyRandomObjectRandomizer<T>
      */
     @Override
     public T get() {
-        return resetNestedExcludedPaths(getEasyRandom().nextObject(targetClass));
+        return getEasyRandom().nextObject(targetClass);
     }
 }

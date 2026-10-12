@@ -38,9 +38,8 @@ import org.instancio.settings.Settings;
  * <strong>Excluded paths.</strong> A single name, such as {@code "id"}, is matched by a selector of this class's
  * against every field of that name which the runtime class of the instance declares or inherits; a field which the
  * target class inherits from a supertype it shares with an associated type is therefore excluded on both. A dotted
- * path, such as {@code "address.address1"}, is not expressed to Instancio, whose scopes can not anchor it exactly;
- * {@link #get()} resets the slot it names once Instancio is done. Instancio assigns fields directly, so no setter runs.
- * See {@link #getInstancio(Object)}.
+ * path, such as {@code "address.address1"}, is not expressed to Instancio, whose scopes can not anchor it exactly,
+ * and is ignored. See {@link #getInstancio(Object)}.
  *
  * @param <T> the type of the instances to randomize.
  * @implNote {@link Instancio#ofObject(Object)}, and the {@link InstancioObjectApi#fill() fill()} which
@@ -114,8 +113,7 @@ public abstract class InstancioObjectRandomizer<T>
      *         <p>
      *         Nested paths are not expressed here. Instancio scopes a selector
      *         {@link org.instancio.ScopeableSelector#within(org.instancio.Scope...) within} enclosing slots, but not
-     *         <em>directly</em> within them, so {@code "a.b"} would also match an {@code a.x.b}; {@link #get()} resets
-     *         them, exactly, once Instancio is done.
+     *         <em>directly</em> within them, so {@code "a.b"} would also match an {@code a.x.b}.
      * @see Instancio#ofObject(Object)
      * @see #getInstancioSettings()
      */
@@ -132,14 +130,13 @@ public abstract class InstancioObjectRandomizer<T>
      *
      * @return {@inheritDoc}
      * @implSpec Fills the instance from {@link #newTargetInstance()}, through the
-     *         {@link #getInstancio(Object) instancio} API, {@link #resetNestedExcludedPaths(Object) resets} the slots
-     *         which nested excluded paths name, and returns that very instance.
+     *         {@link #getInstancio(Object) instancio} API, and returns that very instance.
      * @see InstancioObjectApi#fill()
      */
     @Override
     public T get() {
         final T instance = newTargetInstance();
         getInstancio(instance).fill();
-        return resetNestedExcludedPaths(instance);
+        return instance;
     }
 }

@@ -18,19 +18,14 @@ final class _Constants {
     static final String EXCLUDED_PATH_SEPARATOR = ".";
 
     /**
-     * A regular expression for what separates the segments of an excluded path, as it is given: a run of
+     * A pattern of what separates the segments of an excluded path, as it is given: a run of
      * {@value #EXCLUDED_PATH_SEPARATOR}, white space ({@link Character#isWhitespace(int)}), and space separators
      * ({@code \p{Zs}}, which takes in a no-break space), in any mix.
      *
      * @apiNote White space is a separator, rather than a part of a segment, so that no engine is ever handed a
      *         name with white space in it; {@code "a b"} is read as {@code "a.b"}.
      */
-    static final String EXCLUDED_PATH_SEPARATOR_REGEX = "[.\\p{javaWhitespace}\\p{Zs}]+";
-
-    /**
-     * The compiled pattern of {@link #EXCLUDED_PATH_SEPARATOR_REGEX}.
-     */
-    static final Pattern EXCLUDED_PATH_SEPARATOR_PATTERN = Pattern.compile(EXCLUDED_PATH_SEPARATOR_REGEX);
+    static final Pattern EXCLUDED_PATH_SEPARATOR_PATTERN = Pattern.compile("[.\\p{javaWhitespace}\\p{Zs}]+");
 
     // ---------------------------------------------------------------------------------------------------------------------
     private _Constants() {

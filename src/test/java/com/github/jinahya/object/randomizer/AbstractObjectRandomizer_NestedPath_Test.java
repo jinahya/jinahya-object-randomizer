@@ -233,8 +233,28 @@ class AbstractObjectRandomizer_NestedPath_Test {
                         }),
                 Arguments.of("Easy Random", (Function<List<String>, ObjectRandomizer<User>>)
                         v -> new EasyRandomObjectRandomizer<>(User.class, v) {
+                            // a pool large enough that no bean is shared between two slots; a shared bean is
+                            // populated where it is first reached, which a nested path does not cover
+                            @Override
+                            protected org.jeasy.random.EasyRandomParameters getEasyRandomParameters() {
+                                return super.getEasyRandomParameters().objectPoolSize(10_000);
+                            }
                         })
         );
+    }
+
+    /**
+     * The flavors whose engines exclude by path; of those declared here, Easy Random's alone.
+     */
+    static Stream<Arguments> nestingFlavors() {
+        return flavors().filter(a -> a.get()[0].equals("Easy Random"));
+    }
+
+    /**
+     * The flavors whose engines can not exclude by path, and which ignore a nested path.
+     */
+    static Stream<Arguments> nonNestingFlavors() {
+        return flavors().filter(a -> !a.get()[0].equals("Easy Random"));
     }
 
     private static List<User> draw(final Function<List<String>, ObjectRandomizer<User>> flavor,
@@ -244,7 +264,7 @@ class AbstractObjectRandomizer_NestedPath_Test {
     }
 
     @DisplayName("a nested path excludes the slot of the association, and that slot only")
-    @MethodSource("flavors")
+    @MethodSource("nestingFlavors")
     @ParameterizedTest(name = "[{index}] {0}")
     void nested_ExcludedOnTheAssociation(final String name,
                                          final Function<List<String>, ObjectRandomizer<User>> flavor) {
@@ -257,7 +277,7 @@ class AbstractObjectRandomizer_NestedPath_Test {
     }
 
     @DisplayName("a nested path reaches every element of a collection")
-    @MethodSource("flavors")
+    @MethodSource("nestingFlavors")
     @ParameterizedTest(name = "[{index}] {0}")
     void nested_ExcludedOnEveryElement(final String name,
                                        final Function<List<String>, ObjectRandomizer<User>> flavor) {
@@ -271,7 +291,7 @@ class AbstractObjectRandomizer_NestedPath_Test {
     }
 
     @DisplayName("a nested path reaches every element of an array, and every value of a map")
-    @MethodSource("flavors")
+    @MethodSource("nestingFlavors")
     @ParameterizedTest(name = "[{index}] {0}")
     void nested_ExcludedOnEveryArrayElementAndMapValue(final String name,
                                                        final Function<List<String>, ObjectRandomizer<User>> flavor) {
@@ -287,7 +307,7 @@ class AbstractObjectRandomizer_NestedPath_Test {
     }
 
     @DisplayName("a nested path reaches more than one level down")
-    @MethodSource("flavors")
+    @MethodSource("nestingFlavors")
     @ParameterizedTest(name = "[{index}] {0}")
     void nested_ExcludedThreeLevelsDown(final String name,
                                         final Function<List<String>, ObjectRandomizer<User>> flavor) {
@@ -299,7 +319,7 @@ class AbstractObjectRandomizer_NestedPath_Test {
     }
 
     @DisplayName("a nested path names a slot which the owner inherits")
-    @MethodSource("flavors")
+    @MethodSource("nestingFlavors")
     @ParameterizedTest(name = "[{index}] {0}")
     void nested_ExcludedWhenInherited(final String name,
                                       final Function<List<String>, ObjectRandomizer<User>> flavor) {
@@ -309,14 +329,23 @@ class AbstractObjectRandomizer_NestedPath_Test {
         }
     }
 
-    @DisplayName("a nested slot is left at what a freshly constructed owner carries, a primitive included")
-    @MethodSource("flavors")
+    @DisplayName("a nested slot is left at what the constructor of its owner assigns, a primitive included")
+    @MethodSource("nestingFlavors")
     @ParameterizedTest(name = "[{index}] {0}")
     void nested_KeepsWhatTheConstructorAssigned(final String name,
                                                 final Function<List<String>, ObjectRandomizer<User>> flavor) {
         for (final var user : draw(flavor, List.of("address.country", "address.number"))) {
             assertThat(user.getAddress().getCountry()).isEqualTo(COUNTRY);
             assertThat(user.getAddress().getNumber()).isEqualTo(NUMBER);
+        }
+    }
+
+    @DisplayName("a flavor whose engine can not exclude by path ignores a nested path")
+    @MethodSource("nonNestingFlavors")
+    @ParameterizedTest(name = "[{index}] {0}")
+    void nested_Ignored(final String name, final Function<List<String>, ObjectRandomizer<User>> flavor) {
+        for (final var user : draw(flavor, List.of("address.address1"))) {
+            assertThat(user.getAddress().getAddress1()).as("the nested slot, randomized all the same").isNotNull();
         }
     }
 
@@ -363,89 +392,6 @@ class AbstractObjectRandomizer_NestedPath_Test {
         }
         assertThat(Status.ACTIVE.getLabel()).isEqualTo("active");
         assertThat(Status.INACTIVE.getLabel()).isEqualTo("inactive");
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-    /**
-     * A subclass of {@link User}, which {@link AbstractObjectRandomizer#newTargetInstance()} may return.
-     */
-    public static class UserSub
-            extends User {
-
-        private Address secondary;
-
-        public Address getSecondary() {
-            return secondary;
-        }
-
-        public void setSecondary(final Address secondary) {
-            this.secondary = secondary;
-        }
-    }
-
-    static Stream<Arguments> instantiatingFlavors() {
-        return Stream.of(
-                Arguments.of("PODAM", (Function<List<String>, ObjectRandomizer<User>>)
-                        v -> new PodamObjectRandomizer<>(User.class, v) {
-                            @Override
-                            protected User newTargetInstance() {
-                                return new UserSub();
-                            }
-                        }),
-                Arguments.of("Instancio", (Function<List<String>, ObjectRandomizer<User>>)
-                        v -> new InstancioObjectRandomizer<>(User.class, v) {
-                            @Override
-                            protected User newTargetInstance() {
-                                return new UserSub();
-                            }
-                        })
-        );
-    }
-
-    @DisplayName("a nested path reaches a slot which only the subclass newTargetInstance() returns declares")
-    @MethodSource("instantiatingFlavors")
-    @ParameterizedTest(name = "[{index}] {0}")
-    void nested_OnASubclassInstance(final String name,
-                                    final Function<List<String>, ObjectRandomizer<User>> flavor) {
-        for (final var user : draw(flavor, List.of("secondary.address1", "address.address1"))) {
-            assertThat(user).isInstanceOf(UserSub.class);
-            final var secondary = ((UserSub) user).getSecondary();
-            assertThat(secondary).as("the subclass's own association").isNotNull();
-            assertThat(secondary.getAddress1()).as("the excluded slot under it").isNull();
-            assertThat(secondary.getAddress2()).as("a sibling of the excluded slot").isNotNull();
-            assertThat(user.getAddress().getAddress1()).as("the excluded slot under an inherited one").isNull();
-        }
-    }
-
-    @DisplayName("Fixture Monkey: a slot set through the builder, and named by a nested path, is excluded all the same")
-    @Test
-    void nested_WinsOverTheBuilder_OfFixtureMonkey() {
-        final var randomizer = new FixtureMonkeyObjectRandomizer<User>(User.class, List.of("address.address1")) {
-            @Override
-            protected com.navercorp.fixturemonkey.ArbitraryBuilder<User> getArbitraryBuilder() {
-                return super.getArbitraryBuilder().set("address.address1", "set").set("address.address2", "set");
-            }
-        };
-        for (int i = 0; i < DRAWS; i++) {
-            final var user = randomizer.get();
-            assertThat(user.getAddress().getAddress1()).as("set, and excluded").isNull();
-            assertThat(user.getAddress().getAddress2()).as("set only").isEqualTo("set");
-        }
-    }
-
-    @DisplayName("Easy Random: a nested path is excluded even when an override replaces the exclusion policy")
-    @Test
-    void nested_SurvivesAReplacedPolicy_OfEasyRandom() {
-        final var randomizer = new EasyRandomObjectRandomizer<User>(User.class, List.of("address.address1")) {
-            @Override
-            protected org.jeasy.random.EasyRandomParameters getEasyRandomParameters() {
-                return super.getEasyRandomParameters().exclusionPolicy(new org.jeasy.random.DefaultExclusionPolicy());
-            }
-        };
-        for (int i = 0; i < DRAWS; i++) {
-            assertThat(randomizer.get().getAddress().getAddress1()).isNull();
-        }
     }
 
     // -----------------------------------------------------------------------------------------------------------------

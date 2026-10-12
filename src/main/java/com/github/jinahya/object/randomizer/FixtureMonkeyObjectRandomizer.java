@@ -36,9 +36,8 @@ import java.util.Objects;
  * <strong>Excluded paths.</strong> A single name, such as {@code "id"}, is matched by a property generator of this
  * class's against the properties of the {@link #targetClass}, and of its subclasses, only; a property of that name on
  * an associated type is generated as usual. A dotted path, such as {@code "address.address1"}, is not expressed to
- * Fixture Monkey, whose property generators see no place in the object graph; {@link #get()} resets the slot it names
- * once the instance is sampled, and the exclusion wins over an override of {@link #getArbitraryBuilder()} which sets
- * that very slot. Fixture Monkey assigns fields directly, so no setter runs. See {@link #getFixtureMonkey()}.
+ * Fixture Monkey, whose property generators see no place in the object graph, and is ignored. See
+ * {@link #getFixtureMonkey()}.
  *
  * @param <T> the type of the instances to randomize.
  * @implNote A no-argument constructor is <em>required</em>: the introspector resolves one reflectively and
@@ -134,7 +133,7 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
      *         <p>
      *         A property generator sees a property, not where in the object graph it is, so nested paths can not be
      *         expressed here; nor by the builder's {@code setNull(String)}, which would overwrite what a constructor
-     *         assigned rather than keep it. {@link #get()} resets them once the engine is done.
+     *         assigned rather than keep it.
      * @implSpec An override which does not build on what this method returns gives up the exclusions, and the
      *         plugin, along with them.
      * @see FixtureMonkey#builder()
@@ -162,8 +161,7 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
      *
      * @return a new builder for the {@link #targetClass}.
      * @implSpec Override this method to customize an instance before it is sampled — say,
-     *         {@code super.getArbitraryBuilder().set("name", "...")}. A slot set here which a nested path of
-     *         {@link #excludedPaths} also names is reset all the same, once sampled: the exclusion wins.
+     *         {@code super.getArbitraryBuilder().set("name", "...")}.
      * @see FixtureMonkey#giveMeBuilder(Class)
      * @see #getFixtureMonkey()
      */
@@ -177,13 +175,11 @@ public abstract class FixtureMonkeyObjectRandomizer<T>
      * @return {@inheritDoc}
      * @throws NullPointerException when the engine samples {@code null}, which it does for a type it can not
      *                              introspect.
-     * @implSpec Samples a new instance from the {@link #getArbitraryBuilder() arbitraryBuilder}, and
-     *         {@link #resetNestedExcludedPaths(Object) resets} the slots which nested excluded paths name.
+     * @implSpec Samples a new instance from the {@link #getArbitraryBuilder() arbitraryBuilder}.
      * @see ArbitraryBuilder#sample()
      */
     @Override
     public T get() {
-        return resetNestedExcludedPaths(
-                Objects.requireNonNull(getArbitraryBuilder().sample(), "Fixture Monkey returned null"));
+        return Objects.requireNonNull(getArbitraryBuilder().sample(), "Fixture Monkey returned null");
     }
 }

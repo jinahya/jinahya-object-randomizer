@@ -37,9 +37,8 @@ import java.util.List;
  * <strong>Excluded paths.</strong> A single name, such as {@code "id"}, is handed to PODAM as an excluded field name,
  * for the {@link #targetClass} and for every class assignable to it, wherever PODAM meets one; it is therefore excluded
  * on an instance of the target type reached through an association, too, such as a {@code friend} of the same type. A
- * dotted path, such as {@code "address.address1"}, is no name PODAM understands, so it is never handed over;
- * {@link #get()} resets the slot it names once PODAM is done. PODAM writes through setters, so the setter of such a
- * slot has run, side effects and all, before the slot is reset. See {@link #getClassInfoStrategy()}.
+ * dotted path, such as {@code "address.address1"}, is no name PODAM understands, so it is never handed over, and
+ * is ignored. See {@link #getClassInfoStrategy()}.
  *
  * @param <T> the type of the instances to randomize.
  * @implNote Constraint support is partial, and is keyed to the <em>field</em>: an annotation declared on a
@@ -106,7 +105,7 @@ public abstract class PodamObjectRandomizer<T>
      *         customization keeps working.
      *         <p>
      *         A {@link ClassInfo} describes a class, not a place in the object graph, so nested paths can not be
-     *         expressed here at all; {@link #get()} resets them once PODAM is done.
+     *         expressed here at all.
      */
     protected ClassInfoStrategy getClassInfoStrategy() {
         return new AbstractClassInfoStrategy() {
@@ -157,12 +156,11 @@ public abstract class PodamObjectRandomizer<T>
      *
      * @return {@inheritDoc}
      * @implSpec Populates a {@link #newTargetInstance() new instance} of the {@link #targetClass}, using a
-     *         factory from the {@link #getPodamFactory() podamFactory} method, and then
-     *         {@link #resetNestedExcludedPaths(Object) resets} the slots which nested excluded paths name.
+     *         factory from the {@link #getPodamFactory() podamFactory} method.
      * @see PodamFactory#populatePojo(Object, java.lang.reflect.Type...)
      */
     @Override
     public T get() {
-        return resetNestedExcludedPaths(getPodamFactory().populatePojo(newTargetInstance()));
+        return getPodamFactory().populatePojo(newTargetInstance());
     }
 }

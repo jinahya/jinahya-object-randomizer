@@ -80,8 +80,9 @@ far as it can.
 
 The word *path* is chosen ahead of what every engine can do. A **single name**, such as `"id"` or
 `"address"`, is what every flavor honors, by handing it to its engine. A **dotted path**, such as
-`"address.address1"`, is a best-effort extension: each flavor here honors it, within the limits
-below, but a flavor of another engine, or one written by hand, need not.
+`"address.address1"`, is honored only by a flavor whose engine can exclude by path — of those
+here, `EasyRandomObjectRandomizer` alone; the others ignore it. Anything more is yours to do, by
+overriding `get()` and adjusting what the engine returns.
 
 ```java
 super(User.class, List.of("id", "address.address1"));
@@ -90,14 +91,11 @@ super(User.class, List.of("id", "address.address1"));
 ### Rules
 
 - **A single name** goes to the engine's own exclusion mechanism, and is scoped as that engine
-  scopes an exclusion — see *Single names scoped by* in the table above, and below.
+  scopes an exclusion — see *A single name is excluded on* in the table below.
 - **A dotted path** is anchored at the target: the first segment names a slot of the target, each
   next one a slot of what the previous one reached. A segment which reaches a collection, an array,
-  an `Optional` or a map's values reaches every element, so `"addresses.address1"` names the
-  `address1` of every element of `addresses`.
-- **A dotted slot is left at what a freshly constructed owner carries** — the engine created that
-  owner, so there is no earlier value to keep. Nothing else is ever written: an owner which can not
-  be constructed afresh, through a no-argument constructor, keeps the slot as the engine wrote it.
+  an `Optional` or a map reaches every element, so `"addresses.address1"` names the `address1` of
+  every element of `addresses`; whether a map's keys are reached too is the engine's to say.
 - **Paths are normalized.** A path is split on runs of `.` and white space and rejoined with `.`,
   so `" a . b "`, `"a..b"` and `"a b"` are all `"a.b"`, and `"a."` is `"a"`; no engine is ever
   handed a name with white space in it. Segments are not verified otherwise, for what names a slot
@@ -110,21 +108,32 @@ super(User.class, List.of("id", "address.address1"));
 
 ### Per flavor
 
-| Flavor | A single name is excluded on | A dotted path is honored by | Caveat |
-| --- | --- | --- | --- |
-| `PodamObjectRandomizer` | the target, and any instance of the target type in the graph, such as a `friend` of the same type | a reset, once PODAM is done | the setter of the slot has run, side effects and all |
-| `InstancioObjectRandomizer` | every field of that name the target declares or inherits — on an associated type too, when inherited from a shared supertype | a reset, once Instancio is done | — |
-| `FixtureMonkeyObjectRandomizer` | the target type and its subclasses only | a reset, once sampled | it wins over a `getArbitraryBuilder()` override which sets that very slot |
+| Flavor | A single name is excluded on | A dotted path |
+| --- | --- | --- |
+| `PodamObjectRandomizer` | the target, and any instance of the target type in the graph, such as a `friend` of the same type | ignored |
+| `InstancioObjectRandomizer` | every field of that name the target declares or inherits — on an associated type too, when inherited from a shared supertype | ignored |
+| `FixtureMonkeyObjectRandomizer` | the target type and its subclasses only | ignored |
+| `EasyRandomObjectRandomizer` | every field of that name the target declares or inherits, wherever in the graph Easy Random meets one | excluded natively, on every element of a collection or an array and every key and value of a map — except on a pooled bean, which Easy Random may have populated where no path excluded the slot |
 
-A flavor which resets does so through `resetNestedExcludedPaths(T)`, which an override of `get()`
-can call too.
+### Beyond what an engine can exclude
 
-### Never excluded by a dotted path
+A dotted path a flavor ignores, or a slot an engine can not reach, is yours to settle in `get()`:
 
-- a component of a record, and a field reflection can not reach — of a `java.*` class, or of a
-  module which does not open its package — left as the engine wrote it, and logged;
-- a key of a map, which would corrupt the map it is a key of;
-- anything on an enum constant, which is shared by the whole program and is never walked into.
+```java
+class UserRandomizer extends PodamObjectRandomizer<User> {
+
+    UserRandomizer() {
+        super(User.class, List.of("id"));
+    }
+
+    @Override
+    public User get() {
+        final var user = super.get();
+        user.getAddress().setAddress1(null); // what "address.address1" would have meant
+        return user;
+    }
+}
+```
 
 ## Bean validation
 
