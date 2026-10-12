@@ -1,5 +1,25 @@
 package com.github.jinahya.object.randomizer;
 
+/*-
+ * #%L
+ * jinahya-object-randomizer
+ * %%
+ * Copyright (C) 2026 Jin Kwon
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import uk.co.jemos.podam.api.AbstractClassInfoStrategy;
@@ -37,8 +57,8 @@ import java.util.List;
  * <strong>Excluded paths.</strong> A single name, such as {@code "id"}, is handed to PODAM as an excluded field name,
  * for the {@link #targetClass} and for every class assignable to it, wherever PODAM meets one; it is therefore excluded
  * on an instance of the target type reached through an association, too, such as a {@code friend} of the same type. A
- * dotted path, such as {@code "address.address1"}, is no name PODAM understands, so it is never handed over, and
- * is ignored. See {@link #getClassInfoStrategy()}.
+ * dotted path, such as {@code "address.address1"}, is no name PODAM understands, so it is never handed over, and is
+ * ignored. See {@link #getClassInfoStrategy()}.
  *
  * @param <T> the type of the instances to randomize.
  * @implNote Constraint support is partial, and is keyed to the <em>field</em>: an annotation declared on a

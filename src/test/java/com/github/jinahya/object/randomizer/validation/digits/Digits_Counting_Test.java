@@ -1,5 +1,25 @@
 package com.github.jinahya.object.randomizer.validation.digits;
 
+/*-
+ * #%L
+ * jinahya-object-randomizer
+ * %%
+ * Copyright (C) 2026 Jin Kwon
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import jakarta.validation.constraints.Digits;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,15 +34,15 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /**
  * Records how the active validation provider counts the digits of {@link Digits @Digits}, value by value.
  * <p>
- * Each row names a constraint, the type the value arrives as, the value, and the verdict of each provider:
- * {@code HV} for Hibernate Validator, {@code BVAL} for Apache BVal. Both providers count {@code precision() - scale()}
- * integral and {@code max(scale(), 0)} fractional digits; they differ over trailing zeros, which Hibernate Validator
- * keeps on a {@code BigDecimal} and on a {@code CharSequence}, and which BVal strips from a {@code BigDecimal} and keeps
- * on a {@code CharSequence}. And {@link BigDecimal#precision()} is {@code 1} for a zero of any scale, so the integral
- * digits of zero follow its scale: {@code 1} for {@code 0}, {@code -1} for {@code 0.00}.
+ * Each row names a constraint, the type the value arrives as, the value, and the verdict of each provider: {@code HV}
+ * for Hibernate Validator, {@code BVAL} for Apache BVal. Both providers count {@code precision() - scale()} integral
+ * and {@code max(scale(), 0)} fractional digits; they differ over trailing zeros, which Hibernate Validator keeps on a
+ * {@code BigDecimal} and on a {@code CharSequence}, and which BVal strips from a {@code BigDecimal} and keeps on a
+ * {@code CharSequence}. And {@link BigDecimal#precision()} is {@code 1} for a zero of any scale, so the integral digits
+ * of zero follow its scale: {@code 1} for {@code 0}, {@code -1} for {@code 0.00}.
  * <p>
- * The verdicts are the same on Jakarta EE 10 (Hibernate Validator 8.0, BVal 3.0) and Jakarta EE 11 (Hibernate
- * Validator 9.1, BVal 3.1).
+ * The verdicts are the same on Jakarta EE 10 (Hibernate Validator 8.0, BVal 3.0) and Jakarta EE 11 (Hibernate Validator
+ * 9.1, BVal 3.1).
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @see <a href="https://issues.apache.org/jira/browse/BVAL-90">BVAL-90</a>
@@ -162,8 +182,8 @@ class Digits_Counting_Test {
     }
 
     /**
-     * Verifies that both providers reject a zero under {@code @Digits(integer = 0, fraction = 0)}: zero is counted
-     * with one integral digit.
+     * Verifies that both providers reject a zero under {@code @Digits(integer = 0, fraction = 0)}: zero is counted with
+     * one integral digit.
      *
      * @param value the value.
      * @param hv    the verdict of Hibernate Validator.

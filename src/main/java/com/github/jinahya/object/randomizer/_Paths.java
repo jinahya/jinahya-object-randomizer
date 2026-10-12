@@ -1,13 +1,33 @@
 package com.github.jinahya.object.randomizer;
 
+/*-
+ * #%L
+ * jinahya-object-randomizer
+ * %%
+ * Copyright (C) 2026 Jin Kwon
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Utilities, internal to this package, for refining excluded paths: each is {@link #normalize(String) normalized}, and
- * the set of them {@link #prune(Set) pruned}, once, when a randomizer is constructed; what a path names is the
- * engine's to say.
+ * the set of them {@link #prune(Set) pruned}, once, when a randomizer is constructed; what a path names is the engine's
+ * to say.
  * <p>
  * A path is a {@value _Constants#EXCLUDED_PATH_SEPARATOR}-separated sequence of segments; a <em>simple</em> one has a
  * single segment, such as {@code "id"}, and a <em>nested</em> one more, such as {@code "address.address1"}.

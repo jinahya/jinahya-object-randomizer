@@ -1,5 +1,25 @@
 package com.github.jinahya.object.randomizer;
 
+/*-
+ * #%L
+ * jinahya-object-randomizer
+ * %%
+ * Copyright (C) 2026 Jin Kwon
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -25,8 +45,8 @@ import java.util.stream.StreamSupport;
  * <p>
  * The word <em>path</em> is chosen ahead of what every engine can do. A single name, such as {@code "address"}, is what
  * every flavor honors, by handing it to its engine. A dotted path, such as {@code "address.address1"}, is honored only
- * by a flavor whose engine can exclude by path, within the limits its documentation states; every other flavor
- * ignores it. A subclass which needs more overrides {@link #get()}, and adjusts what the engine returns.
+ * by a flavor whose engine can exclude by path, within the limits its documentation states; every other flavor ignores
+ * it. A subclass which needs more overrides {@link #get()}, and adjusts what the engine returns.
  * <ul>
  *   <li>A <em>simple</em> path, of a single segment such as {@code "id"}, is handed to the engine's own exclusion
  *       mechanism, and so is scoped as that engine scopes an exclusion; read each flavor's documentation before
@@ -61,8 +81,8 @@ public abstract class AbstractObjectRandomizer<T>
      * @param targetClass   the class to be randomized.
      * @param excludedPaths paths of the slots to be excluded from randomization; each is split on runs of {@code .} and
      *                      white space, and rejoined with {@code .}, so that {@code " a . b "}, {@code "a..b"}, and
-     *                      {@code "a b"} are all {@code "a.b"}; duplicates are dropped, and so is a path under
-     *                      another one, such as {@code "address.city"} beside {@code "address"}.
+     *                      {@code "a b"} are all {@code "a.b"}; duplicates are dropped, and so is a path under another
+     *                      one, such as {@code "address.city"} beside {@code "address"}.
      * @throws NullPointerException     when either argument is {@code null}, or when an element is {@code null}.
      * @throws IllegalArgumentException when an element is left with no segment, as {@code ""}, {@code "  "}, and
      *                                  {@code "."} are.
