@@ -109,9 +109,9 @@ public final class ObjectRandomizerUtils {
 
     /**
      * Locates, by the {@linkplain ObjectRandomizerUtils naming convention}, the randomizer class of the specified
-     * targetClass class.
+     * target class.
      *
-     * @param targetClass the targetClass class whose randomizer class is located.
+     * @param targetClass the target class whose randomizer class is located.
      * @return an optional of the randomizer class of the {@code targetClass}; {@code empty} when the convention names
      *         no usable one.
      * @throws NullPointerException when the {@code targetClass} is {@code null}.
@@ -167,15 +167,15 @@ public final class ObjectRandomizerUtils {
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * Returns, an optional of, a new instance of the randomizer class located for the specified targetClass class by
+     * Returns, an optional of, a new instance of the randomizer class located for the specified target class by
      * the {@linkplain ObjectRandomizerUtils naming convention}.
      * <p>
      * An empty optional carries no reason: the convention names no class for the {@code targetClass}, or the class it
      * names is not an {@link ObjectRandomizer}. A class which <em>is</em> located, though, is one the developer meant
      * to be used, so failing to instantiate it is a fault, and is raised rather than reported as an absence.
      *
-     * @param targetClass the targetClass class.
-     * @param <T>         the targetClass type parameter.
+     * @param targetClass the target class.
+     * @param <T>         the target type parameter.
      * @return an optional of a new instance of the randomizer located for the {@code targetClass}; {@code empty} when
      *         the convention names no usable one.
      * @throws NullPointerException when the {@code targetClass} is {@code null}.
@@ -196,7 +196,7 @@ public final class ObjectRandomizerUtils {
     }
 
     /**
-     * Returns, an optional of, a randomized instance of the specified targetClass class, using the randomizer located
+     * Returns, an optional of, a randomized instance of the specified target class, using the randomizer located
      * for it by the {@linkplain ObjectRandomizerUtils naming convention}.
      * <p>
      * An empty optional means simply that no instance is handed back, with no reason attached: either no randomizer is
@@ -204,8 +204,8 @@ public final class ObjectRandomizerUtils {
      * an instance of the {@code targetClass}. A caller which needs to tell those apart calls
      * {@link #newRandomizerInstanceOf(Class)} and does its own checking.
      *
-     * @param targetClass the targetClass class.
-     * @param <T>         the targetClass type parameter.
+     * @param targetClass the target class.
+     * @param <T>         the target type parameter.
      * @return an optional of randomized instance of the {@code targetClass}; {@code empty} when none is obtained.
      * @throws NullPointerException when the {@code targetClass} is {@code null}.
      * @throws RuntimeException     when the located randomizer can not be instantiated, and when its
