@@ -145,9 +145,9 @@ public final class ObjectRandomizerUtils {
                         // Class.forName, with initialize false, loads the class and its supertypes but does not
                         // link it, so a candidate whose supertype is missing, or whose loader throws, fails here with
                         // an Error rather than an exception, while a candidate whose *engine* is missing loads fine,
-                        // and fails only when it is linked, in _Utils.newInstance. A probe is speculative, so this
-                        // does not end it -- but, unlike a name which simply does not exist, it is a
-                        // misconfiguration worth seeing.
+                        // and fails only when it is linked, in _Utils.newInstance, which names it. A probe is
+                        // speculative, so this does not end it -- but, unlike a name which simply does not exist,
+                        // it is a misconfiguration worth seeing.
                         logger.log(System.Logger.Level.WARNING,
                                    "failed to load a candidate; className: " + n + "; probing further", le);
                         return null;
@@ -181,10 +181,10 @@ public final class ObjectRandomizerUtils {
      * @return an optional of a new instance of the randomizer located for the {@code targetClass}; {@code empty} when
      *         the convention names no usable one.
      * @throws NullPointerException when the {@code targetClass} is {@code null}.
-     * @throws RuntimeException     when the located randomizer can not be instantiated.
-     * @throws LinkageError         when the located randomizer can not be linked, which is what a randomizer whose
-     *                              engine is missing from the classpath fails with, as a
-     *                              {@link NoClassDefFoundError} naming a class of the engine.
+     * @throws RuntimeException     when the located randomizer can not be instantiated; a randomizer whose engine is
+     *                              missing from the classpath is one, and fails with the {@link NoClassDefFoundError}
+     *                              which names a class of the engine as the cause, and with the randomizer named in
+     *                              the message.
      * @apiNote The randomizer is returned as an {@code ObjectRandomizer<T>} without the class it is declared
      *         for being checked against the {@code targetClass}, for that declaration proves less than it appears to; a
      *         randomizer is verified on what it <em>produces</em>, which is what
@@ -213,11 +213,10 @@ public final class ObjectRandomizerUtils {
      * @param <T>         the target type parameter.
      * @return an optional of randomized instance of the {@code targetClass}; {@code empty} when none is obtained.
      * @throws NullPointerException when the {@code targetClass} is {@code null}.
-     * @throws RuntimeException     when the located randomizer can not be instantiated, and when its
+     * @throws RuntimeException     when the located randomizer can not be instantiated, which a randomizer whose
+     *                              engine is missing from the classpath can not be, as
+     *                              {@link #newRandomizerInstanceOf(Class)} documents; and when its
      *                              {@link ObjectRandomizer#get() get()} throws.
-     * @throws LinkageError         when the located randomizer can not be linked, which is what a randomizer whose
-     *                              engine is missing from the classpath fails with; see
-     *                              {@link #newRandomizerInstanceOf(Class)}.
      * @apiNote The randomizer is judged on what it produced, rather than on the class it is declared for: an
      *         {@code ObjectRandomizer<Foo>} whose {@link ObjectRandomizer#get() get()} returns a {@code Bar} is
      *         well-formed at compile time, erasure leaving nothing to enforce it, so the produced instance is the

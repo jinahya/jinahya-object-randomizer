@@ -285,4 +285,36 @@ class ObjectRandomizerUtils_Test {
     void newRandomizedInstanceOf_Empty_RandomizerProducesNull() {
         assertThat(ObjectRandomizerUtils.newRandomizedInstanceOf(Hollow.class)).isEmpty();
     }
+
+    // ------------------------------------------------------------------------------------------------- engineless
+
+    /**
+     * A target class whose randomizer, {@link EnginelessRandomizer}, is of a flavor whose engine is missing.
+     */
+    static class Engineless {
+
+    }
+
+    /**
+     * A randomizer of a flavor whose engine {@link EngineHidingClassLoader} hides.
+     */
+    static class EnginelessRandomizer
+            extends PodamObjectRandomizer<Engineless> {
+
+        EnginelessRandomizer() {
+            super(Engineless.class, List.of());
+        }
+    }
+
+    @DisplayName("newRandomizerInstanceOf(Engineless.class) -> a RuntimeException naming the randomizer;"
+                 + " the engine is missing, so the located randomizer is a fault, not an absence")
+    @Test
+    void newRandomizerInstanceOf_RuntimeException_EngineMissing() throws ClassNotFoundException {
+        final var loader = new EngineHidingClassLoader("uk.co.jemos.");
+        final var target = loader.loadClass(Engineless.class.getName());
+        assertThatThrownBy(() -> ObjectRandomizerUtils.newRandomizerInstanceOf(target))
+                .isExactlyInstanceOf(RuntimeException.class)
+                .hasMessageContaining(EnginelessRandomizer.class.getName())
+                .hasCauseInstanceOf(NoClassDefFoundError.class);
+    }
 }

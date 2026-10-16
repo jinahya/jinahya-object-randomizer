@@ -43,13 +43,12 @@ final class _Utils {
      * @param <T>   the type of the instance to create.
      * @return a new instance of the {@code clazz}.
      * @throws RuntimeException when the {@code clazz} declares no no-argument constructor, or when that constructor is
-     *                          inaccessible or throws; and when the {@code clazz} is of a shape which can not be
+     *                          inaccessible or throws; when the {@code clazz} is of a shape which can not be
      *                          instantiated at all, such as an interface, an enum, an abstract class, or an inner
-     *                          class.
-     * @throws LinkageError     when the {@code clazz} can not be linked, which the constructor lookup is the first
-     *                          thing to do; a randomizer whose engine is missing from the classpath fails here, with
-     *                          a {@link NoClassDefFoundError} naming a class of the engine, rather than at the probe
-     *                          which located it.
+     *                          class; and when the {@code clazz} can not be linked, or initialized, which is what a
+     *                          randomizer whose engine is missing from the classpath fails with. The
+     *                          {@link LinkageError} is the cause, and the message names the {@code clazz}, which the
+     *                          error itself does not.
      * @apiNote The shape of the {@code clazz} is not examined beforehand. Every shape which can not be
      *         instantiated fails here anyway -- on the constructor lookup, or on the instantiation itself -- and
      *         reflection names the failure; a check ahead of it would only duplicate that.
@@ -68,6 +67,11 @@ final class _Utils {
             // an interface, an enum, and an inner class all land here: none of them declares a constructor which
             // takes no argument at all
             throw new RuntimeException("no no-arg constructor; class: " + clazz, nsme);
+        } catch (final LinkageError le) {
+            // the constructor lookup is the first thing to link the class, and so to verify it, along with its
+            // supertypes; a randomizer whose engine is missing from the classpath fails right here, with a
+            // NoClassDefFoundError which names a class of the engine, and nothing else -- so name the class, too
+            throw new RuntimeException("failed to link; class: " + clazz, le);
         }
         if (!constructor.canAccess(null)) {
             constructor.setAccessible(true);
@@ -82,6 +86,10 @@ final class _Utils {
             // an abstract class lands here: it may well declare a no-argument constructor, which simply can not be
             // invoked on its own
             throw new RuntimeException("failed to instantiate; class: " + clazz, roe);
+        } catch (final LinkageError le) {
+            // a static initializer which fails lands here, as an ExceptionInInitializerError, and so does one which
+            // reaches for a class the classpath lacks
+            throw new RuntimeException("failed to initialize; class: " + clazz, le);
         }
     }
 

@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -159,5 +161,40 @@ class _Utils_Test {
                 .isExactlyInstanceOf(RuntimeException.class)
                 .hasMessageContaining("failed to instantiate")
                 .cause().isSameAs(Throwing.THROWN);
+    }
+
+    // ------------------------------------------------------------------------------------------------- engineless
+
+    /**
+     * A target class for {@link EnginelessRandomizer}.
+     */
+    static class Engineless {
+
+    }
+
+    /**
+     * A randomizer of a flavor whose engine {@link EngineHidingClassLoader} hides; it links only where PODAM is.
+     */
+    static class EnginelessRandomizer
+            extends PodamObjectRandomizer<Engineless> {
+
+        EnginelessRandomizer() {
+            super(Engineless.class, List.of());
+        }
+    }
+
+    @DisplayName("a randomizer whose engine is missing fails on the constructor lookup, as a RuntimeException naming"
+                 + " the class, with the NoClassDefFoundError naming the engine's class as the cause")
+    @Test
+    void newInstance_RuntimeException_EngineMissing() throws ClassNotFoundException {
+        final var loader = new EngineHidingClassLoader("uk.co.jemos.");
+        final var clazz = loader.loadClass(EnginelessRandomizer.class.getName());
+        assertThat(clazz.getClassLoader()).as("defined by the hiding loader, not the parent").isSameAs(loader);
+        assertThatThrownBy(() -> _Utils.newInstance(clazz))
+                .isExactlyInstanceOf(RuntimeException.class)
+                .hasMessageContaining("failed to link")
+                .hasMessageContaining(clazz.getName())
+                .cause().isInstanceOf(NoClassDefFoundError.class)
+                .hasMessageContaining("uk/co/jemos/podam");
     }
 }
