@@ -122,8 +122,8 @@ public abstract class AbstractObjectRandomizer<T>
      *         making it accessible where required, so that a {@code private} one is enough. Override this method for a
      *         class which declares no no-argument constructor, or which needs state assigned before it is randomized;
      *         an override may return a subclass of the {@link #targetClass}. Only {@link PodamObjectRandomizer} and
-     *         {@link InstancioObjectRandomizer} call it &mdash; the other two flavors let their engine construct the
-     *         instance.
+     *         {@link InstancioObjectRandomizer} call it &mdash; {@link FixtureMonkeyObjectRandomizer} lets its engine
+     *         construct the instance.
      */
     protected T newTargetInstance() {
         return _Utils.newInstance(targetClass);
