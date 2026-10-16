@@ -244,8 +244,11 @@ classpath. Neither `ObjectRandomizer` nor `AbstractObjectRandomizer` references 
 bytecode, and each flavor references only its own, so the flavors that are not used are never
 loaded.
 
-A randomizer whose engine is missing at run time fails to link, and the convention probe reports
-that at `WARNING` rather than treating it as "no randomizer declared".
+A randomizer whose engine is missing at run time is still located — the probe loads a class
+without linking it — and fails afterwards, when it is instantiated, with a `NoClassDefFoundError`
+naming a class of the engine. That is an `Error`, not the `RuntimeException` the Javadoc of
+`newRandomizerInstanceOf` promises for a randomizer which can not be instantiated; see
+[issue #1](https://github.com/jinahya/jinahya-object-randomizer/issues/1).
 
 So declare this module and the one engine you picked, side by side. Two things are omitted
 throughout: versions, which you pin in your own `<dependencyManagement>`, and `<scope>`, which is

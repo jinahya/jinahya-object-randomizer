@@ -46,6 +46,10 @@ final class _Utils {
      *                          inaccessible or throws; and when the {@code clazz} is of a shape which can not be
      *                          instantiated at all, such as an interface, an enum, an abstract class, or an inner
      *                          class.
+     * @throws LinkageError     when the {@code clazz} can not be linked, which the constructor lookup is the first
+     *                          thing to do; a randomizer whose engine is missing from the classpath fails here, with
+     *                          a {@link NoClassDefFoundError} naming a class of the engine, rather than at the probe
+     *                          which located it.
      * @apiNote The shape of the {@code clazz} is not examined beforehand. Every shape which can not be
      *         instantiated fails here anyway -- on the constructor lookup, or on the instantiation itself -- and
      *         reflection names the failure; a check ahead of it would only duplicate that.
