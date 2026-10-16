@@ -92,10 +92,13 @@ super(User.class, List.of("id", "address.address1"));
 
 - **A single name** goes to the engine's own exclusion mechanism, and is scoped as that engine
   scopes an exclusion — see *A single name is excluded on* in the table below.
-- **A dotted path** is anchored at the target: the first segment names a slot of the target, each
-  next one a slot of what the previous one reached. A segment which reaches a collection, an array,
-  an `Optional` or a map reaches every element, so `"addresses.address1"` names the `address1` of
-  every element of `addresses`; whether a map's keys are reached too is the engine's to say.
+- **A dotted path** is read, by a flavor whose engine can exclude by path — none of the three here
+  can, so each ignores it — as anchored at the target: the first segment names a slot of the
+  target, each next one a slot of what the previous one reached. A segment which reaches a
+  collection, an array, an `Optional` or a map reaches every element, so `"addresses.address1"`
+  names the `address1` of every element of `addresses`; whether a map's keys are reached too is
+  the engine's to say. The rule is stated here so that a path means one thing whichever flavor
+  reads it; today, it is a slot for `get()` to settle, as below.
 - **Paths are normalized.** A path is split on runs of `.` and white space and rejoined with `.`,
   so `" a . b "`, `"a..b"` and `"a b"` are all `"a.b"`, and `"a."` is `"a"`; no engine is ever
   handed a name with white space in it. Segments are not verified otherwise, for what names a slot
