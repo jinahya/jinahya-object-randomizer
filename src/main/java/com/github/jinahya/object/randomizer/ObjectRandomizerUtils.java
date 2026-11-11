@@ -57,13 +57,13 @@ import java.util.Optional;
  *
  * <h2>Absence and failure</h2>
  * A lookup here returns an {@link Optional}, and an empty one carries no reason. The convention may name nothing at
- * all; it may name a class which is not an {@link ObjectRandomizer}; the randomizer may produce nothing, or something
- * which is not an instance of the target. None of those is raised &mdash; a caller which needs to tell them apart does
- * its own checking &mdash; though each is logged where it is passed over, the ones which look like a misconfiguration
- * at {@link System.Logger.Level#WARNING WARNING}.
+ * all, or it may name a class which is not an {@link ObjectRandomizer}. Neither is raised &mdash; a caller which needs
+ * to tell them apart does its own checking &mdash; though each is logged where it is passed over, the latter, which
+ * looks like a misconfiguration, at {@link System.Logger.Level#WARNING WARNING}.
  * <p>
- * One thing does fail: a class which the convention locates, and which is therefore meant to be used, but which can not
- * be instantiated.
+ * A class which the convention locates, though, is meant to be used, so what goes wrong with it does fail: that it can
+ * not be instantiated, and that it produces {@code null}, which the contract of {@link ObjectRandomizer#get()} rules
+ * out, or something which is not an instance of the target.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @see ObjectRandomizer
@@ -204,23 +204,26 @@ public final class ObjectRandomizerUtils {
      * Returns, an optional of, a randomized instance of the specified target class, using the randomizer located
      * for it by the {@linkplain ObjectRandomizerUtils naming convention}.
      * <p>
-     * An empty optional means simply that no instance is handed back, with no reason attached: either no randomizer is
-     * located for the {@code targetClass}, or the one located produces nothing, or it produces something which is not
-     * an instance of the {@code targetClass}. A caller which needs to tell those apart calls
-     * {@link #newRandomizerInstanceOf(Class)} and does its own checking.
+     * An empty optional means simply that no randomizer is located for the {@code targetClass}, with no reason
+     * attached, as {@link #newRandomizerInstanceOf(Class)} documents. A randomizer which <em>is</em> located, but
+     * which produces no instance of the {@code targetClass}, is raised on.
      *
      * @param targetClass the target class.
      * @param <T>         the target type parameter.
-     * @return an optional of randomized instance of the {@code targetClass}; {@code empty} when none is obtained.
+     * @return an optional of randomized instance of the {@code targetClass}; {@code empty} when no randomizer is
+     *         located.
      * @throws NullPointerException when the {@code targetClass} is {@code null}.
      * @throws RuntimeException     when the located randomizer can not be instantiated, which a randomizer whose
      *                              engine is missing from the classpath can not be, as
      *                              {@link #newRandomizerInstanceOf(Class)} documents; and when its
      *                              {@link ObjectRandomizer#get() get()} throws.
+     * @throws IllegalArgumentException when the {@code targetClass} has an invalid randomizer, one which produces
+     *                                  {@code null}, which the contract of {@link ObjectRandomizer#get() get()} rules
+     *                                  out, or an instance of a wrong type; the randomizer is named in the message.
      * @apiNote The randomizer is judged on what it produced, rather than on the class it is declared for: an
      *         {@code ObjectRandomizer<Foo>} whose {@link ObjectRandomizer#get() get()} returns a {@code Bar} is
      *         well-formed at compile time, erasure leaving nothing to enforce it, so the produced instance is the
-     *         evidence which matters. One which fails that test is dropped, rather than raised on.
+     *         evidence which matters. One which fails that test is raised on.
      * @see #newRandomizerInstanceOf(Class)
      */
     public static <T> Optional<T> newRandomizedInstanceOf(final Class<T> targetClass) {
@@ -228,17 +231,18 @@ public final class ObjectRandomizerUtils {
                 .map(r -> {
                     final var instance = r.get();
                     if (instance == null) {
-                        // the contract of get() promises an instance; one which hands back nothing is broken
-                        logger.log(System.Logger.Level.WARNING, "produced null; randomizer: {0}, target: {1}",
-                                   r, targetClass);
-                        return null;
+                        // the contract of get() promises an instance; one which hands back nothing is broken, so the
+                        // targetClass is one with an invalid randomizer -- a fault rather than an absence
+                        throw new IllegalArgumentException(
+                                "invalid randomizer, which produced null; targetClass: " + targetClass
+                                + ", randomizer: " + r.getClass().getName());
                     }
                     if (!targetClass.isInstance(instance)) {
-                        // erasure let this through at compile time; dropped, as documented, but worth seeing
-                        logger.log(System.Logger.Level.WARNING,
-                                   "produced an incompatible instance; class: {0}, randomizer: {1}, target: {2}",
-                                   instance.getClass(), r, targetClass);
-                        return null;
+                        // erasure let this through at compile time; the randomizer supplied a wrong type, so the
+                        // targetClass, again, is one with an invalid randomizer
+                        throw new IllegalArgumentException(
+                                "invalid randomizer, which produced an instance of " + instance.getClass().getName()
+                                + "; targetClass: " + targetClass + ", randomizer: " + r.getClass().getName());
                     }
                     return targetClass.cast(instance);
                 });

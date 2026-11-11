@@ -265,25 +265,31 @@ class ObjectRandomizerUtils_Test {
                 .containsInstanceOf(Sub.class);
     }
 
-    @DisplayName("newRandomizedInstanceOf(Narrowed.class) -> empty;"
-                 + " NarrowedRandomizer produces a Sup, which is not a Narrowed, so nothing is handed back")
+    @DisplayName("newRandomizedInstanceOf(Narrowed.class) -> an IllegalArgumentException naming the randomizer;"
+                 + " NarrowedRandomizer produces a Sup, which is not a Narrowed")
     @Test
-    void newRandomizedInstanceOf_Empty_RandomizerProducesASuperclass() {
-        assertThat(ObjectRandomizerUtils.newRandomizedInstanceOf(Narrowed.class)).isEmpty();
+    void newRandomizedInstanceOf_IllegalArgumentException_RandomizerProducesASuperclass() {
+        assertThatThrownBy(() -> ObjectRandomizerUtils.newRandomizedInstanceOf(Narrowed.class))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(NarrowedRandomizer.class.getName());
     }
 
-    @DisplayName("newRandomizedInstanceOf(Unrelated.class) -> empty;"
-                 + " UnrelatedRandomizer produces a Foreign, which is not an Unrelated, so nothing is handed back")
+    @DisplayName("newRandomizedInstanceOf(Unrelated.class) -> an IllegalArgumentException naming the randomizer;"
+                 + " UnrelatedRandomizer produces a Foreign, which is not an Unrelated")
     @Test
-    void newRandomizedInstanceOf_Empty_RandomizerProducesAnUnrelatedClass() {
-        assertThat(ObjectRandomizerUtils.newRandomizedInstanceOf(Unrelated.class)).isEmpty();
+    void newRandomizedInstanceOf_IllegalArgumentException_RandomizerProducesAnUnrelatedClass() {
+        assertThatThrownBy(() -> ObjectRandomizerUtils.newRandomizedInstanceOf(Unrelated.class))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(UnrelatedRandomizer.class.getName());
     }
 
-    @DisplayName("newRandomizedInstanceOf(Hollow.class) -> empty;"
-                 + " HollowRandomizer produces null, so nothing is handed back")
+    @DisplayName("newRandomizedInstanceOf(Hollow.class) -> an IllegalArgumentException naming the randomizer;"
+                 + " HollowRandomizer produces null, which the contract of get() rules out")
     @Test
-    void newRandomizedInstanceOf_Empty_RandomizerProducesNull() {
-        assertThat(ObjectRandomizerUtils.newRandomizedInstanceOf(Hollow.class)).isEmpty();
+    void newRandomizedInstanceOf_IllegalArgumentException_RandomizerProducesNull() {
+        assertThatThrownBy(() -> ObjectRandomizerUtils.newRandomizedInstanceOf(Hollow.class))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(HollowRandomizer.class.getName());
     }
 
     // ------------------------------------------------------------------------------------------------- engineless

@@ -46,8 +46,8 @@ public interface ObjectRandomizer<T>
      *
      * @return a randomized instance; never {@code null}.
      * @apiNote The {@link NotNull} on the return value states the contract; nothing enforces it, for a randomizer is
-     *         instantiated, and called, directly. {@link ObjectRandomizerUtils#newRandomizedInstanceOf(Class)} drops a
-     *         {@code null} as the product of a broken randomizer.
+     *         instantiated, and called, directly. {@link ObjectRandomizerUtils#newRandomizedInstanceOf(Class)} raises an
+     *         {@link IllegalArgumentException} on a {@code null}, the target class having a broken randomizer.
      */
     @NotNull
     @Override
