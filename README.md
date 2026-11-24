@@ -205,7 +205,7 @@ against that specification. Each version below is the newest release of its line
 | `jakarta.jakartaee-bom` | 10.0.0 | 11.0.0 |
 | Jakarta Validation | 3.0 | 3.1 |
 | `jakarta.validation-api` (pinned by the BOM) | 3.0.2 | 3.1.1 |
-| Hibernate Validator | 8.0.x (8.0.5.Final) | 9.x (9.1.4.Final) |
+| Hibernate Validator | 8.0.x (8.0.6.Final) | 9.x (9.2.0.Final) |
 | Apache BVal `bval-jsr` | 3.0.x (3.0.2) | 3.1.x (3.1.0) |
 | Jakarta Expression Language | 5.0 | 6.0 |
 | Expressly | 5.0.x (5.0.0) | 6.0.x (6.0.0) |
@@ -215,8 +215,8 @@ against that specification. Each version below is the newest release of its line
 Where the alignment comes from:
 
 - **Hibernate Validator.** Each release's POM declares the `jakarta.validation-api` it depends on,
-  and its jar manifest declares the specification it implements: 8.0.5.Final depends on 3.0.2 and
-  declares Jakarta Bean Validation 3.0; 9.1.4.Final depends on 3.1.1 and declares Jakarta
+  and its jar manifest declares the specification it implements: 8.0.6.Final depends on 3.0.2 and
+  declares Jakarta Bean Validation 3.0; 9.2.0.Final depends on 3.1.1 and declares Jakarta
   Validation 3.1.
 - **Apache BVal.** Each release's parent POM pins the `jakarta.validation-api` it builds against,
   and its jar manifest declares the specification it implements: 3.0.1 and later 3.0 releases
@@ -229,10 +229,11 @@ Where the alignment comes from:
   choosing a provider.
 
 Nothing outside the two profiles is allowed to move these versions. `fixture-monkey-jakarta-validation`
-declares a complete Jakarta EE 9 stack at `compile` scope (see [Fixture Monkey](#comnavercorpfixturemonkeyfixture-monkey-jakarta-validation)).
-This build excludes all three of its artifacts, so the active profiles supply the API, the
-expression language and the provider. Without the exclusion, Hibernate Validator 7 would be a
-second provider in every `apache-bval` run. `_Validation_Provider_Test` guards against this: it
+declares the Jakarta EE 9 API, `jakarta.validation-api` 3.0.2, at `compile` scope (see [Fixture Monkey](#comnavercorpfixturemonkeyfixture-monkey-jakarta-validation)).
+This build excludes it, so the active profiles supply the API, as they supply the expression
+language and the provider. Since 1.2.4 the plugin declares no provider of its own; up to 1.2.3 it
+brought Hibernate Validator 7, which would have been a second provider in every `apache-bval` run.
+`_Validation_Provider_Test` guards against a second provider coming back: it
 asserts that exactly one provider is discovered, and that it is the one the active profile names.
 `Address_Test` does the same for the specification version compiled from the generation's test
 source root.
@@ -356,10 +357,9 @@ through its public no-argument constructor, once. Then:
 Either line is logged once, not on every call. Replace `getFixtureMonkey()` to build without the
 plugin.
 
-The artifact declares a complete **Jakarta EE 9** stack at `compile` scope — `hibernate-validator`
-7.0.5.Final, `jakarta.validation-api` 3.0.2 and `org.glassfish:jakarta.el` 4.0.2 — which will
-quietly downgrade an EE 10 or EE 11 classpath. Exclude the three and let your own platform
-generation stand:
+The artifact declares the **Jakarta EE 9** API, `jakarta.validation-api` 3.0.2, at `compile`
+scope, which will quietly downgrade an EE 10 or EE 11 classpath unless you manage the API's
+version. Exclude it and let your own platform generation stand:
 
 ```xml
 <dependency>
@@ -367,30 +367,24 @@ generation stand:
   <artifactId>fixture-monkey-jakarta-validation</artifactId>
   <exclusions>
     <exclusion>
-      <groupId>org.hibernate.validator</groupId>
-      <artifactId>hibernate-validator</artifactId>
-    </exclusion>
-    <exclusion>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
-    </exclusion>
-    <exclusion>
-      <groupId>org.glassfish</groupId>
-      <artifactId>jakarta.el</artifactId>
     </exclusion>
   </exclusions>
 </dependency>
 ```
 
-Excluding is safe only because you replace them. The plugin's documentation says the API and
-Hibernate Validator are "already provided as part of the dependency", so once you exclude them, both
-are yours to provide: the API, at your generation, and an implementation of it. A consumer that
-annotates its own classes already declares the API, and one that asserts a randomized instance is
-valid already declares an implementation — which is why excluding costs nothing in practice. If you
-declare neither, pin the versions instead of excluding.
+Excluding is safe only because you replace it: the API, at your generation, is then yours to
+declare. A consumer that annotates its own classes already declares it, which is why excluding
+costs nothing in practice. If you declare it nowhere, manage its version, with your platform's BOM,
+instead of excluding.
 
-Note also that `org.glassfish:jakarta.el` is the superseded expression-language implementation;
-`org.glassfish.expressly:expressly` is its successor and what Hibernate Validator 8 and 9 expect.
+Since 1.2.4 the plugin no longer brings an implementation. Up to 1.2.3 it also declared
+`hibernate-validator` 7.0.5.Final and `org.glassfish:jakarta.el` 4.0.2 at `compile` scope, and
+those were to be excluded as well. Now a provider, and the expression language it needs, are yours
+to add. Without one, Fixture Monkey still generates values that respect the constraints, but it no
+longer validates the object it generated. Hibernate Validator 8 and 9 expect
+`org.glassfish.expressly:expressly`, the successor of `org.glassfish:jakarta.el`.
 
 Finally, `fixture-monkey-javax-validation` is the wrong artifact for this platform — the `javax`
 annotations are not the ones any of these engines read.
@@ -420,8 +414,8 @@ annotations are not the ones any of these engines read.
 - [Maven Central][fixture-monkey-validation-central] — `com.navercorp.fixturemonkey:fixture-monkey-jakarta-validation`,
   the second artifact, without which constraints are ignored
 - [naver/fixture-monkey#1350][fixture-monkey-1350] — the upstream issue for the `compile`-scope EE 9
-  stack that second artifact brings with it, asking for Hibernate Validator and Jakarta EL to be
-  declared test-only there
+  stack that second artifact brought with it up to 1.2.3, closed by 1.2.4, which no longer declares
+  Hibernate Validator or Jakarta EL
 - [jqwik] — arrives transitively with `fixture-monkey`, as a second JUnit Platform `TestEngine`
 
 ### Bean validation

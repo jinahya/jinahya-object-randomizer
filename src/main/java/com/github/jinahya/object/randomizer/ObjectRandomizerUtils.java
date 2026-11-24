@@ -169,8 +169,8 @@ public final class ObjectRandomizerUtils {
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * Returns, an optional of, a new instance of the randomizer class located for the specified target class by
-     * the {@linkplain ObjectRandomizerUtils naming convention}.
+     * Returns, an optional of, a new instance of the randomizer class located for the specified target class by the
+     * {@linkplain ObjectRandomizerUtils naming convention}.
      * <p>
      * An empty optional carries no reason: the convention names no class for the {@code targetClass}, or the class it
      * names is not an {@link ObjectRandomizer}. A class which <em>is</em> located, though, is one the developer meant
@@ -183,8 +183,8 @@ public final class ObjectRandomizerUtils {
      * @throws NullPointerException when the {@code targetClass} is {@code null}.
      * @throws RuntimeException     when the located randomizer can not be instantiated; a randomizer whose engine is
      *                              missing from the classpath is one, and fails with the {@link NoClassDefFoundError}
-     *                              which names a class of the engine as the cause, and with the randomizer named in
-     *                              the message.
+     *                              which names a class of the engine as the cause, and with the randomizer named in the
+     *                              message.
      * @apiNote The randomizer is returned as an {@code ObjectRandomizer<T>} without the class it is declared
      *         for being checked against the {@code targetClass}, for that declaration proves less than it appears to; a
      *         randomizer is verified on what it <em>produces</em>, which is what
@@ -201,22 +201,22 @@ public final class ObjectRandomizerUtils {
     }
 
     /**
-     * Returns, an optional of, a randomized instance of the specified target class, using the randomizer located
-     * for it by the {@linkplain ObjectRandomizerUtils naming convention}.
+     * Returns, an optional of, a randomized instance of the specified target class, using the randomizer located for it
+     * by the {@linkplain ObjectRandomizerUtils naming convention}.
      * <p>
      * An empty optional means simply that no randomizer is located for the {@code targetClass}, with no reason
-     * attached, as {@link #newRandomizerInstanceOf(Class)} documents. A randomizer which <em>is</em> located, but
-     * which produces no instance of the {@code targetClass}, is raised on.
+     * attached, as {@link #newRandomizerInstanceOf(Class)} documents. A randomizer which <em>is</em> located, but which
+     * produces no instance of the {@code targetClass}, is raised on.
      *
      * @param targetClass the target class.
      * @param <T>         the target type parameter.
      * @return an optional of randomized instance of the {@code targetClass}; {@code empty} when no randomizer is
      *         located.
-     * @throws NullPointerException when the {@code targetClass} is {@code null}.
-     * @throws RuntimeException     when the located randomizer can not be instantiated, which a randomizer whose
-     *                              engine is missing from the classpath can not be, as
-     *                              {@link #newRandomizerInstanceOf(Class)} documents; and when its
-     *                              {@link ObjectRandomizer#get() get()} throws.
+     * @throws NullPointerException     when the {@code targetClass} is {@code null}.
+     * @throws RuntimeException         when the located randomizer can not be instantiated, which a randomizer whose
+     *                                  engine is missing from the classpath can not be, as
+     *                                  {@link #newRandomizerInstanceOf(Class)} documents; and when its
+     *                                  {@link ObjectRandomizer#get() get()} throws.
      * @throws IllegalArgumentException when the {@code targetClass} has an invalid randomizer, one which produces
      *                                  {@code null}, which the contract of {@link ObjectRandomizer#get() get()} rules
      *                                  out, or an instance of a wrong type; the randomizer is named in the message.
